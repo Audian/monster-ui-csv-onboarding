@@ -5,7 +5,7 @@ define(function(require) {
 		Papa = require('papaparse');
 
 	var app = {
-		css: [ 'app' ],
+		css: ['app'],
 
 		i18n: {
 			'de-DE': { customCss: false },
@@ -15,7 +15,8 @@ define(function(require) {
 		appFlags: {
 			csvOnboarding: {
 				columns: {
-					mandatory: ['first_name', 'last_name', 'password', 'email', 'extension', 'mac_address', 'brand', 'family', 'model']
+					mandatory: ['first_name', 'last_name', 'password', 'email', 'extension'],
+					optional: ['mac_address', 'brand', 'family', 'model']
 				},
 				users: {
 					smartPBXCallflowString: ' SmartPBX\'s Callflow',
@@ -87,8 +88,8 @@ define(function(require) {
 			self.bindUploadEvents(template);
 
 			container.find('.content-wrapper')
-						.empty()
-						.append(template);
+				.empty()
+				.append(template);
 		},
 
 		bindUploadEvents: function(template) {
@@ -135,7 +136,7 @@ define(function(require) {
 									columns: {
 										expected: {
 											mandatory: self.appFlags.csvOnboarding.columns.mandatory,
-											optional: []
+											optional: self.appFlags.csvOnboarding.columns.optional
 										},
 										actual: results.meta.fields
 									}
@@ -201,8 +202,8 @@ define(function(require) {
 			self.bindReview(template, data);
 
 			parent.find('.content-wrapper')
-					.empty()
-					.append(template);
+				.empty()
+				.append(template);
 		},
 
 		bindReview: function(template, data) {
@@ -255,19 +256,33 @@ define(function(require) {
 				countFinishedRequests = 0,
 				dataProgress;
 
+			console.log('formatted Data', formattedData);
 			_.each(formattedData, function(record) {
 				parallelRequests.push(function(callback) {
 					var data = self.formatUserData(record, customizations);
+					if (record.brand === '' || record.family === '' || record.mac_address === '' || record.model === '') {
+						console.log('Created User');
+						self.createSmartPBXUser(data, function(dataUser) {
+							dataProgress = {
+								countFinishedRequests: countFinishedRequests++,
+								totalRequests: totalRequests
+							};
+							onProgress(dataUser, dataProgress);
 
-					self.createSmartPBXUser(data, function(dataUser) {
-						dataProgress = {
-							countFinishedRequests: countFinishedRequests++,
-							totalRequests: totalRequests
-						};
-						onProgress(dataUser, dataProgress);
+							callback && callback(null, dataUser);
+						});
+					} else {
+						console.log('Created User and Device');
+						self.createSmartPBXUserDevice(data, function(dataUser) {
+							dataProgress = {
+								countFinishedRequests: countFinishedRequests++,
+								totalRequests: totalRequests
+							};
+							onProgress(dataUser, dataProgress);
 
-						callback && callback(null, dataUser);
-					});
+							callback && callback(null, dataUser);
+						});
+					}
 				});
 			});
 
@@ -288,8 +303,8 @@ define(function(require) {
 				}));
 
 			$('#csv_onboarding_app_container').find('.content-wrapper')
-					.empty()
-					.append(template);
+				.empty()
+				.append(template);
 
 			self.createSmartPBXData(data, customizations, function(user, progress) {
 				var percentFilled = Math.ceil((progress.countFinishedRequests / progress.totalRequests) * 100);
@@ -335,8 +350,8 @@ define(function(require) {
 			});
 
 			parent.find('.content-wrapper')
-					.empty()
-					.append(template);
+				.empty()
+				.append(template);
 		},
 
 		showResults: function(results) {
@@ -502,7 +517,7 @@ define(function(require) {
 			return formattedData;
 		},
 
-		createSmartPBXUser: function(data, success, error) {
+		createSmartPBXUserDevice: function(data, success, error) {
 			var self = this,
 				formattedResult = {
 					device: {},
@@ -539,6 +554,54 @@ define(function(require) {
 					}, function(err, results) {
 						formattedResult.vmbox = results.vmbox;
 						formattedResult.device = results.device;
+
+						data.callflow.owner_id = userId;
+						data.callflow.type = 'mainUserCallflow';
+						data.callflow.flow.data.id = userId;
+						data.callflow.flow.children._.data.id = results.vmbox.id;
+
+						self.createCallflow(data.callflow, function(_dataCF) {
+							formattedResult.callflow = _dataCF;
+
+							success(formattedResult);
+						});
+					});
+				},
+				error: function() {
+					error();
+				}
+			});
+		},
+
+		createSmartPBXUser: function(data, success, error) {
+			var self = this,
+				formattedResult = {
+					user: {},
+					vmbox: {},
+					callflow: {}
+				};
+
+			self.callApi({
+				resource: 'user.create',
+				data: {
+					accountId: self.accountId,
+					data: data.user
+				},
+				success: function(_dataUser) {
+					formattedResult.user = _dataUser.data;
+
+					var userId = _dataUser.data.id;
+					data.user.id = userId;
+					data.vmbox.owner_id = userId;
+
+					monster.parallel({
+						vmbox: function(callback) {
+							self.createVMBox(data.vmbox, function(_dataVM) {
+								callback(null, _dataVM);
+							});
+						}
+					}, function(err, results) {
+						formattedResult.vmbox = results.vmbox;
 
 						data.callflow.owner_id = userId;
 						data.callflow.type = 'mainUserCallflow';
@@ -604,6 +667,7 @@ define(function(require) {
 		},
 
 		formatUserData: function(data, customizations) {
+			console.log('formatUserData data', data);
 			var self = this,
 				fullName = data.first_name + ' ' + data.last_name,
 				callerIdName = fullName.substring(0, 15),
