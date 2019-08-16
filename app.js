@@ -256,40 +256,44 @@ define(function(require) {
 				countFinishedRequests = 0,
 				dataProgress;
 
-			console.log('formatted Data', formattedData);
-			_.each(formattedData, function(record) {
-				parallelRequests.push(function(callback) {
-					var data = self.formatUserData(record, customizations);
-					if (record.brand === '' || record.family === '' || record.mac_address === '' || record.model === '') {
-						console.log('Created User');
-						self.createSmartPBXUser(data, function(dataUser) {
-							dataProgress = {
-								countFinishedRequests: countFinishedRequests++,
-								totalRequests: totalRequests
-							};
-							onProgress(dataUser, dataProgress);
+			self.usersGetMainDirectory(function(directory) {
+				var directory = {
+					directories: directory.id
+				};
 
-							callback && callback(null, dataUser);
-						});
-					} else {
-						console.log('Created User and Device');
-						self.createSmartPBXUserDevice(data, function(dataUser) {
-							dataProgress = {
-								countFinishedRequests: countFinishedRequests++,
-								totalRequests: totalRequests
-							};
-							onProgress(dataUser, dataProgress);
+				_.each(formattedData, function(record) {
+					_.extend(record, directory);
+					parallelRequests.push(function(callback) {
+						var data = self.formatUserData(record, customizations);
+						if (record.brand === '' || record.family === '' || record.mac_address === '' || record.model === '') {
+							self.createSmartPBXUser(data, formattedData, function(dataUser) {
+								dataProgress = {
+									countFinishedRequests: countFinishedRequests++,
+									totalRequests: totalRequests
+								};
+								onProgress(dataUser, dataProgress);
 
-							callback && callback(null, dataUser);
-						});
-					}
+								callback && callback(null, dataUser);
+							});
+						} else {
+							self.createSmartPBXUserDevice(data, formattedData, function(dataUser) {
+								dataProgress = {
+									countFinishedRequests: countFinishedRequests++,
+									totalRequests: totalRequests
+								};
+								onProgress(dataUser, dataProgress);
+
+								callback && callback(null, dataUser);
+							});
+						}
+					});
 				});
-			});
 
-			totalRequests = parallelRequests.length;
+				totalRequests = parallelRequests.length;
 
-			monster.parallel(parallelRequests, function(err, results) {
-				self.showResults(results);
+				monster.parallel(parallelRequests, function(err, results) {
+					self.showResults(results);
+				});
 			});
 		},
 
@@ -517,7 +521,7 @@ define(function(require) {
 			return formattedData;
 		},
 
-		createSmartPBXUserDevice: function(data, success, error) {
+		createSmartPBXUserDevice: function(data, formattedData, success, error) {
 			var self = this,
 				formattedResult = {
 					device: {},
@@ -561,7 +565,19 @@ define(function(require) {
 						data.callflow.flow.children._.data.id = results.vmbox.id;
 
 						self.createCallflow(data.callflow, function(_dataCF) {
+
+							var dirConstructor = {
+									directories: {}
+								},
+								dirID = {};
+
 							formattedResult.callflow = _dataCF;
+							dirID[formattedData[0].directories] = _dataCF.id; //directory id: callflow id
+
+							$.extend(dirConstructor.directories, dirID);
+							$.extend(data.user, dirConstructor);
+
+							self.usersUpdateUser(data.user);
 
 							success(formattedResult);
 						});
@@ -573,7 +589,7 @@ define(function(require) {
 			});
 		},
 
-		createSmartPBXUser: function(data, success, error) {
+		createSmartPBXUser: function(data, formattedData, success, error) {
 			var self = this,
 				formattedResult = {
 					user: {},
@@ -610,6 +626,19 @@ define(function(require) {
 
 						self.createCallflow(data.callflow, function(_dataCF) {
 							formattedResult.callflow = _dataCF;
+
+							var dirConstructor = {
+									directories: {}
+								},
+								dirID = {};
+
+							formattedResult.callflow = _dataCF;
+							dirID[formattedData[0].directories] = _dataCF.id; //directory id: callflow id
+
+							$.extend(dirConstructor.directories, dirID);
+							$.extend(data.user, dirConstructor);
+
+							self.usersUpdateUser(data.user);
 
 							success(formattedResult);
 						});
@@ -666,8 +695,85 @@ define(function(require) {
 			});
 		},
 
+		usersUpdateUser: function(user) {
+			var self = this;
+
+			self.callApi({
+				resource: 'user.update',
+				data: {
+					accountId: self.accountId,
+					userId: user.userId,
+					data: user
+				},
+				success: function(data) {
+				}
+			});
+		},
+
+		usersGetMainDirectory: function(callback) {
+			var self = this;
+
+			self.usersListDirectories(function(listDirectories) {
+				var indexMain = -1;
+
+				_.each(listDirectories, function(directory, index) {
+					if (directory.name === 'SmartPBX Directory') {
+						indexMain = index;
+
+						return false;
+					}
+				});
+
+				if (indexMain === -1) {
+					self.usersCreateMainDirectory(function(data) {
+						callback(data);
+					});
+				} else {
+					callback && callback(listDirectories[indexMain]);
+				}
+			});
+		},
+
+		usersListDirectories: function(callback) {
+			var self = this;
+
+			self.callApi({
+				resource: 'directory.list',
+				data: {
+					accountId: self.accountId,
+					filters: {
+						paginate: 'false'
+					}
+				},
+				success: function(data) {
+					callback && callback(data.data);
+				}
+			});
+		},
+
+		usersCreateMainDirectory: function(callback) {
+			var self = this,
+				dataDirectory = {
+					confirm_match: false,
+					max_dtmf: 0,
+					min_dtmf: 3,
+					name: 'SmartPBX Directory',
+					sort_by: 'last_name'
+				};
+
+			self.callApi({
+				resource: 'directory.create',
+				data: {
+					accountId: self.accountId,
+					data: dataDirectory
+				},
+				success: function(data) {
+					callback && callback(data.data);
+				}
+			});
+		},
+
 		formatUserData: function(data, customizations) {
-			console.log('formatUserData data', data);
 			var self = this,
 				fullName = data.first_name + ' ' + data.last_name,
 				callerIdName = fullName.substring(0, 15),
@@ -687,6 +793,7 @@ define(function(require) {
 						},
 						presence_id: data.extension,
 						email: data.email
+						//directory: data.directories
 					}),
 					device: $.extend(true, {}, customizations.device, {
 						device_type: 'sip_device',
@@ -726,10 +833,9 @@ define(function(require) {
 							module: 'user'
 						},
 						name: fullName + self.appFlags.csvOnboarding.users.smartPBXCallflowString,
-						numbers: [ data.extension ]
+						numbers: [data.extension]
 					}
 				};
-
 			return formattedData;
 		}
 	};
