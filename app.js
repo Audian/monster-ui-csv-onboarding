@@ -16,7 +16,7 @@ define(function(require) {
 			csvOnboarding: {
 				columns: {
 					mandatory: ['first_name', 'last_name', 'password', 'email', 'extension'],
-					optional: ['mac_address', 'brand', 'family', 'model']
+					optional: ['mac_address', 'brand', 'family', 'model', 'softphone']
 				},
 				users: {
 					smartPBXCallflowString: ' SmartPBX\'s Callflow',
@@ -265,27 +265,15 @@ define(function(require) {
 					_.extend(record, directory);
 					parallelRequests.push(function(callback) {
 						var data = self.formatUserData(record, customizations);
-						if (record.brand === '' || record.family === '' || record.mac_address === '' || record.model === '') {
-							self.createSmartPBXUser(data, formattedData, function(dataUser) {
-								dataProgress = {
-									countFinishedRequests: countFinishedRequests++,
-									totalRequests: totalRequests
-								};
-								onProgress(dataUser, dataProgress);
+						self.createSmartPBXUser(data, function(dataUser) {
+							dataProgress = {
+								countFinishedRequests: countFinishedRequests++,
+								totalRequests: totalRequests
+							};
+							onProgress(dataUser, dataProgress);
 
-								callback && callback(null, dataUser);
-							});
-						} else {
-							self.createSmartPBXUserDevice(data, formattedData, function(dataUser) {
-								dataProgress = {
-									countFinishedRequests: countFinishedRequests++,
-									totalRequests: totalRequests
-								};
-								onProgress(dataUser, dataProgress);
-
-								callback && callback(null, dataUser);
-							});
-						}
+							callback && callback(null, dataUser);
+						});
 					});
 				});
 
@@ -397,7 +385,7 @@ define(function(require) {
 				formattedData = {
 					fileName: data.fileName
 				};
-
+			console.log('formatTaskData data START', data);
 			_.each(data.records, function(record) {
 				formattedElement = {};
 
@@ -409,8 +397,8 @@ define(function(require) {
 
 				formattedRecords.push(formattedElement);
 			});
-
 			formattedData.data = formattedRecords;
+			console.log('formatTaskData data END', formattedData.data);
 
 			return formattedData;
 		},
@@ -521,7 +509,7 @@ define(function(require) {
 			return formattedData;
 		},
 
-		createSmartPBXUserDevice: function(data, formattedData, success, error) {
+		createSmartPBXUser: function(data, success, error) {
 			var self = this,
 				formattedResult = {
 					device: {},
@@ -529,7 +517,7 @@ define(function(require) {
 					vmbox: {},
 					callflow: {}
 				};
-
+			console.log('1 createSmartPBXUserDevice data', data);
 			self.callApi({
 				resource: 'user.create',
 				data: {
@@ -543,7 +531,6 @@ define(function(require) {
 					data.user.id = userId;
 					data.vmbox.owner_id = userId;
 					data.device.owner_id = userId;
-
 					monster.parallel({
 						vmbox: function(callback) {
 							self.createVMBox(data.vmbox, function(_dataVM) {
@@ -551,13 +538,30 @@ define(function(require) {
 							});
 						},
 						device: function(callback) {
-							self.createDevice(data.device, function(_dataDevice) {
-								callback(null, _dataDevice);
-							});
+							if (data.rawData.brand !== '') { //Detects if there is a valid device.
+								self.createDevice(data.device, function(_dataDevice) { //Create device
+									callback(null, _dataDevice);
+								});
+							} else {
+								callback(null); //Otherwise do not create a device.
+							}
+						},
+						softphone: function(callback) {
+							if (data.rawData.softphone === 'yes') { //Detects if the user needs a softphone
+								self.createSoftPhone(data.user, function(_dataSoftPhone) { //Create softphone
+									//console.log('Softphone Data AFTER API CALL', _dataSoftPhone);
+									
+									callback(null, _dataSoftPhone);
+								});
+							} else {
+								callback(null); //Otherwise do not create a softphone.
+							}
 						}
 					}, function(err, results) {
+						//console.log('Results After API requests', results);
 						formattedResult.vmbox = results.vmbox;
 						formattedResult.device = results.device;
+						formattedResult.softphone = results.softphone;
 
 						data.callflow.owner_id = userId;
 						data.callflow.type = 'mainUserCallflow';
@@ -565,81 +569,20 @@ define(function(require) {
 						data.callflow.flow.children._.data.id = results.vmbox.id;
 
 						self.createCallflow(data.callflow, function(_dataCF) {
-
 							var dirConstructor = {
 									directories: {}
 								},
 								dirID = {};
 
 							formattedResult.callflow = _dataCF;
-							dirID[formattedData[0].directories] = _dataCF.id; //directory id: callflow id
+							dirID[data.rawData.directories] = _dataCF.id; //directory id: callflow id
+							formattedResult.directories = dirID;
 
 							$.extend(dirConstructor.directories, dirID);
 							$.extend(data.user, dirConstructor);
 
 							self.usersUpdateUser(data.user);
-
-							success(formattedResult);
-						});
-					});
-				},
-				error: function() {
-					error();
-				}
-			});
-		},
-
-		createSmartPBXUser: function(data, formattedData, success, error) {
-			var self = this,
-				formattedResult = {
-					user: {},
-					vmbox: {},
-					callflow: {}
-				};
-
-			self.callApi({
-				resource: 'user.create',
-				data: {
-					accountId: self.accountId,
-					data: data.user
-				},
-				success: function(_dataUser) {
-					formattedResult.user = _dataUser.data;
-
-					var userId = _dataUser.data.id;
-					data.user.id = userId;
-					data.vmbox.owner_id = userId;
-
-					monster.parallel({
-						vmbox: function(callback) {
-							self.createVMBox(data.vmbox, function(_dataVM) {
-								callback(null, _dataVM);
-							});
-						}
-					}, function(err, results) {
-						formattedResult.vmbox = results.vmbox;
-
-						data.callflow.owner_id = userId;
-						data.callflow.type = 'mainUserCallflow';
-						data.callflow.flow.data.id = userId;
-						data.callflow.flow.children._.data.id = results.vmbox.id;
-
-						self.createCallflow(data.callflow, function(_dataCF) {
-							formattedResult.callflow = _dataCF;
-
-							var dirConstructor = {
-									directories: {}
-								},
-								dirID = {};
-
-							formattedResult.callflow = _dataCF;
-							dirID[formattedData[0].directories] = _dataCF.id; //directory id: callflow id
-
-							$.extend(dirConstructor.directories, dirID);
-							$.extend(data.user, dirConstructor);
-
-							self.usersUpdateUser(data.user);
-
+							console.log('6 formattedResult', formattedResult);
 							success(formattedResult);
 						});
 					});
@@ -688,6 +631,34 @@ define(function(require) {
 				data: {
 					accountId: self.accountId,
 					data: data
+				},
+				success: function(data) {
+					callback(data.data);
+				}
+			});
+		},
+
+		createSoftPhone: function(data, callback) {
+			//console.log('createSoftPhone data', data);
+			var self = this,
+				formattedDeviceData = {
+					device_type: 'softphone',
+					owner_id: data.id,
+					enabled: true,
+					name: data.first_name + ' ' + data.last_name + ' - softphone',
+					sip: {
+						password: monster.util.randomString(12),
+						username: 'user_' + monster.util.randomString(10)
+					}
+				};
+
+			console.log('2 createSoftPhone formattedDeviceData', formattedDeviceData);
+			
+			self.callApi({
+				resource: 'device.create',
+				data: {
+					accountId: self.accountId,
+					data: formattedDeviceData
 				},
 				success: function(data) {
 					callback(data.data);
