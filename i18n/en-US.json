@@ -14,7 +14,8 @@
 			"proceed": "Proceed",
 			"undo": "Undo",
 			"errors": {
-				"wrongType": "Invalid type, we only accept CSV files and we received: {{type}}"
+				"wrongType": "Invalid type, we only accept CSV files and we received: {{type}}",
+				"message": "Invalid {{error}}: Please assign a valid device {{error}} name for user {{fName}} {{lName}}. If this is a valid {{error}} please contact support to have the {{error}} added. Please build the user manually."
 			},
 			"helpSelection": {
 				"doc": "Additional Information",

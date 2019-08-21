@@ -25,7 +25,14 @@ define(function(require) {
 			}
 		},
 
-		requests: {},
+		requests: {
+			/* Provisioner */
+			'common.chooseModel.getProvisionerData': {
+				apiRoot: monster.config.api.provisioner,
+				url: 'phones',
+				verb: 'GET'
+			}
+		},
 
 		subscribe: {},
 
@@ -69,7 +76,7 @@ define(function(require) {
 				args = pArgs || {},
 				container = args.container || $('#csv_onboarding_app_container .app-content-wrapper'),
 				mainTemplate = $(self.getTemplate({ name: 'layout' }));
-
+			console.log('csv Render');
 			self.uploadsRender(mainTemplate);
 
 			container
@@ -141,7 +148,7 @@ define(function(require) {
 										actual: results.meta.fields
 									}
 								};
-
+								console.log('3 Add Job formattedData', formattedData);
 								self.renderReview(formattedData);
 							}
 						});
@@ -151,10 +158,12 @@ define(function(require) {
 			//template.find('#upload_csv_file').change(handleFileSelect);
 			template.find('#upload_csv_file').on('change', function(e) {
 				handleFileSelect(e);
+				console.log('1 upload click');
 			});
 
 			template.find('#proceed').on('click', function() {
 				addJob();
+				console.log('2 proceed click');
 			});
 
 			template.find('.text-upload').on('click', function() {
@@ -216,6 +225,16 @@ define(function(require) {
 				}
 			});
 
+			console.log('4 bindReview data', data);
+
+			monster.request({
+				resource: 'common.chooseModel.getProvisionerData',
+				data: {},
+				success: function(dataProvisioner) {
+					self.findDeviceBrand(data, dataProvisioner, template);
+				}
+			});
+
 			template.find('#proceed').on('click', function() {
 				var columnsMatching = self.getColumnsMatching(template),
 					resultCheck = self.checkValidColumns(columnsMatching, expectedColumns);
@@ -247,6 +266,98 @@ define(function(require) {
 			template.find('#cancel').on('click', function() {
 				self.csvOnboardingRender();
 			});
+		},
+
+		findDeviceBrand: function(redcordData, provisionerData, template) {
+			var self = this,
+				deviceBrand = {},
+				brandError = 'brand';
+
+			_.each(redcordData.records, function(record) {
+				if (record.brand !== '') {
+					console.log('1 dataProvisioner.data', provisionerData.data);
+					console.log('1 data.records.data', redcordData.records);
+
+					deviceBrand = _.find(provisionerData.data, function(brand) { //Returns the device brand if it is a match.
+						record.brand = record.brand.toLowerCase();
+						brand.name === record.brand ? record.provision = true : record.provision = false; //Sets the provision status to true or false.
+						return brand.name === record.brand; //If there is a match it will return that brand.
+					});
+
+					if (record.brand !== 'none') { //Catches brands labeled as none so that the app does not throw an error or call findDeviceFamily.
+						if (record.provision === true) { //Verifies if the device is valid
+							console.log('Brand Found');
+							self.findDeviceFamily(record, deviceBrand, template); //Calls the next function to verify the family.
+						} else {
+							self.deviceInvalid(record, template, brandError); //Otherwise throws an error.
+						}
+					}
+				} else {
+					self.deviceInvalid(record, template, brandError); //If the brand field is empty it will throw an error. 
+				}
+			});
+		},
+
+		deviceInvalid: function(data, template, errorMessage) {
+			var self = this;
+
+			var text = self.getTemplate({
+				name: '!' + self.i18n.active().csvOnboarding.uploads.errors.message,
+				data: {
+					fName: data.first_name,
+					lName: data.last_name,
+					error: errorMessage
+				}
+			});
+			monster.ui.alert('error', text);
+
+			template.find('#proceed').attr('disabled', 'disabled');
+		},
+
+		findDeviceFamily: function(record, brand, template) {
+			var self = this,
+				deviceFamily = {},
+				familyError = 'family';
+
+			console.log('2 Record', record);
+			console.log('2 Family', brand.families);
+
+			deviceFamily = _.find(brand.families, function(family) {
+				console.log('!Family', family);
+				record.family = record.family.toLowerCase();
+				family.name === record.family ? record.provision = true : record.provision = false; //Sets the status to true or false.
+				return family.name === record.family;
+			});
+
+			console.log('2 deviceFamily', deviceFamily);
+			console.log('2 record.provision', record.provision);
+			
+			if (record.provision === true) {
+				self.findDeviceModel(record, deviceFamily, template);
+			} else {
+				self.deviceInvalid(record, template, familyError);
+			}
+		},
+
+		findDeviceModel: function(record, family, template) {
+			var self = this,
+				modelError = 'model';
+			
+			console.log('3 Family', family);
+			console.log('3 Model', family.models);
+
+			var models = Object.getOwnPropertyNames(family.models);
+
+			_.find(models, function(model) {
+				model === record.model ? record.provision = true : record.provision = false; //Sets the status to true or false.
+				console.log('! End record.provision', record.provision);
+				return model === record.model;
+			});
+
+			if (record.provision === false) {
+				self.deviceInvalid(record, template, modelError);
+			}
+			console.log('COMPLETED');
 		},
 
 		createSmartPBXData: function(formattedData, customizations, onProgress) {
@@ -398,7 +509,7 @@ define(function(require) {
 				formattedRecords.push(formattedElement);
 			});
 			formattedData.data = formattedRecords;
-			console.log('formatTaskData data END', formattedData.data);
+			//console.log('formatTaskData data END', formattedData.data);
 
 			return formattedData;
 		},
@@ -517,7 +628,7 @@ define(function(require) {
 					vmbox: {},
 					callflow: {}
 				};
-			console.log('1 createSmartPBXUserDevice data', data);
+			//console.log('1 createSmartPBXUserDevice data', data);
 			self.callApi({
 				resource: 'user.create',
 				data: {
@@ -538,7 +649,8 @@ define(function(require) {
 							});
 						},
 						device: function(callback) {
-							if (data.rawData.brand !== '') { //Detects if there is a valid device.
+							console.log('Data', data);
+							if (data.rawData.brand !== 'none') { //Detects if there is a valid device.
 								self.createDevice(data.device, function(_dataDevice) { //Create device
 									callback(null, _dataDevice);
 								});
@@ -582,7 +694,7 @@ define(function(require) {
 							$.extend(data.user, dirConstructor);
 
 							self.usersUpdateUser(data.user);
-							console.log('6 formattedResult', formattedResult);
+							//console.log('3 formattedResult', formattedResult);
 							success(formattedResult);
 						});
 					});
@@ -652,7 +764,7 @@ define(function(require) {
 					}
 				};
 
-			console.log('2 createSoftPhone formattedDeviceData', formattedDeviceData);
+			//console.log('2 createSoftPhone formattedDeviceData', formattedDeviceData);
 			
 			self.callApi({
 				resource: 'device.create',
