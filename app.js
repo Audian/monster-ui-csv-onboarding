@@ -31,6 +31,18 @@ define(function(require) {
 				apiRoot: monster.config.api.provisioner,
 				url: 'phones',
 				verb: 'GET'
+			},
+			/* Device iteration for feature keys */
+			'data.template.feature_keys.iteration': {
+				apiRoot: 'https://z.stg.audian.com/',
+				url: '/ui/{brand}/{family}/{model}',
+				verb: 'GET',
+				generateError: false,
+				removeHeaders: [
+					'X-Kazoo-Cluster-ID',
+					'X-Auth-Token',
+					'Content-Type'
+				]
 			}
 		},
 
@@ -76,7 +88,6 @@ define(function(require) {
 				args = pArgs || {},
 				container = args.container || $('#csv_onboarding_app_container .app-content-wrapper'),
 				mainTemplate = $(self.getTemplate({ name: 'layout' }));
-			console.log('csv Render');
 			self.uploadsRender(mainTemplate);
 
 			container
@@ -148,7 +159,6 @@ define(function(require) {
 										actual: results.meta.fields
 									}
 								};
-								console.log('3 Add Job formattedData', formattedData);
 								self.renderReview(formattedData);
 							}
 						});
@@ -158,12 +168,10 @@ define(function(require) {
 			//template.find('#upload_csv_file').change(handleFileSelect);
 			template.find('#upload_csv_file').on('change', function(e) {
 				handleFileSelect(e);
-				console.log('1 upload click');
 			});
 
 			template.find('#proceed').on('click', function() {
 				addJob();
-				console.log('2 proceed click');
 			});
 
 			template.find('.text-upload').on('click', function() {
@@ -225,8 +233,6 @@ define(function(require) {
 				}
 			});
 
-			console.log('4 bindReview data', data);
-
 			monster.request({
 				resource: 'common.chooseModel.getProvisionerData',
 				data: {},
@@ -275,9 +281,6 @@ define(function(require) {
 
 			_.each(redcordData.records, function(record) {
 				if (record.brand !== '') {
-					console.log('1 dataProvisioner.data', provisionerData.data);
-					console.log('1 data.records.data', redcordData.records);
-
 					deviceBrand = _.find(provisionerData.data, function(brand) { //Returns the device brand if it is a match.
 						record.brand = record.brand.toLowerCase();
 						brand.name === record.brand ? record.provision = true : record.provision = false; //Sets the provision status to true or false.
@@ -286,14 +289,13 @@ define(function(require) {
 
 					if (record.brand !== 'none') { //Catches brands labeled as none so that the app does not throw an error or call findDeviceFamily.
 						if (record.provision === true) { //Verifies if the device is valid
-							console.log('Brand Found');
 							self.findDeviceFamily(record, deviceBrand, template); //Calls the next function to verify the family.
 						} else {
 							self.deviceInvalid(record, template, brandError); //Otherwise throws an error.
 						}
 					}
 				} else {
-					self.deviceInvalid(record, template, brandError); //If the brand field is empty it will throw an error. 
+					self.deviceInvalid(record, template, brandError); //If the brand field is empty it will throw an error.
 				}
 			});
 		},
@@ -319,19 +321,12 @@ define(function(require) {
 				deviceFamily = {},
 				familyError = 'family';
 
-			console.log('2 Record', record);
-			console.log('2 Family', brand.families);
-
 			deviceFamily = _.find(brand.families, function(family) {
-				console.log('!Family', family);
 				record.family = record.family.toLowerCase();
 				family.name === record.family ? record.provision = true : record.provision = false; //Sets the status to true or false.
 				return family.name === record.family;
 			});
 
-			console.log('2 deviceFamily', deviceFamily);
-			console.log('2 record.provision', record.provision);
-			
 			if (record.provision === true) {
 				self.findDeviceModel(record, deviceFamily, template);
 			} else {
@@ -342,22 +337,16 @@ define(function(require) {
 		findDeviceModel: function(record, family, template) {
 			var self = this,
 				modelError = 'model';
-			
-			console.log('3 Family', family);
-			console.log('3 Model', family.models);
-
 			var models = Object.getOwnPropertyNames(family.models);
 
 			_.find(models, function(model) {
 				model === record.model ? record.provision = true : record.provision = false; //Sets the status to true or false.
-				console.log('! End record.provision', record.provision);
 				return model === record.model;
 			});
 
 			if (record.provision === false) {
 				self.deviceInvalid(record, template, modelError);
 			}
-			console.log('COMPLETED');
 		},
 
 		createSmartPBXData: function(formattedData, customizations, onProgress) {
@@ -486,7 +475,250 @@ define(function(require) {
 				message: 'Congratulations, you successfully imported data to this account!'
 			});
 
-			self.csvOnboardingRender();
+			var featureKeyDevices = {
+				status: false,
+				data: []
+			};
+
+			_.each(results, function(result) {
+				if (result.device !== undefined) {
+					featureKeyDevices.data.push(result);
+					featureKeyDevices.status = true;
+				}
+			});
+
+			if (featureKeyDevices.status === true) {
+				self.renderFeatureKeys(featureKeyDevices);
+			} else {
+				self.csvOnboardingRender();
+			}
+		},
+
+		renderFeatureKeys: function(newUsers) {
+			var self = this,
+				totalKeys = 12,
+				featureKeys = [],
+				keyTypes = {
+					none: 'None',
+					presence: 'Presence',
+					parking: 'Parking',
+					personal_parking: 'Personal Parking',
+					speed_dial: 'Speed Dial'
+				},
+				userList = {},
+				parkingSpots = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
+
+			for (var i = 0; i < totalKeys; i++) {
+				var FeatuerKeyTemplate = {
+					index: 0
+				};
+
+				FeatuerKeyTemplate.index = i + 1;
+				featureKeys.push(FeatuerKeyTemplate);
+			}
+
+			self.getUsers(function(userData) {
+				userList = userData;
+
+				var parent = $('#csv_onboarding_app_container'),
+					template = $(self.getTemplate({
+						name: 'feature-keys',
+						data: {
+							data: {
+								featureKeys: featureKeys,
+								keyTypes: keyTypes,
+								userList: userList,
+								parkingSpots: parkingSpots
+							}
+						}
+					}));
+
+				parent.find('.content-wrapper')
+					.empty()
+					.append(template);
+
+				template.find('.feature-key-type').on('change', function(event) {
+					var type = $(this).val(),
+						numberPattern = /[1-9][0-2]|[1-9]/g,
+						rowIndex = $(this).attr('name').match(numberPattern), //The index value for the type.
+						keyTypeValue = event.target.value, //The type value. The type values are feature key options like Park or Speed Dial.
+						keyValue = '', //The default value for each key value. The key value is the data for each type such as Park(type) 1(key value).
+						speedDial = {
+							name: '',
+							number: ''
+						};
+
+					$(this).siblings('.feature-key-value').addClass('hidden'); //Hide all key values on render.
+					$(this).siblings('.feature-key-type.active').removeClass('active'); //Remove the current active type.
+					$(this).addClass('active'); //Activate the type (None, Presence, Park, ect)
+					$(this).siblings('.feature-key-value[data-type="' + type + '"]').addClass('active'); //Activate the value of the type.
+					$(this).siblings('.feature-key-value[data-type="' + type + '"]').removeClass('hidden');//Show the type
+
+					if (type === 'none') { //Catches types set to none and leaves them empty.
+						$(this).siblings('.feature-key-value').addClass('hidden');
+
+						featureKeys[rowIndex - 1].type = 'none';
+						featureKeys[rowIndex - 1].value = '';
+					} else {
+						featureKeys[rowIndex - 1].type = keyTypeValue; //Stores the type value in the data storage object.
+
+						keyValue = $(this).siblings('.feature-key-value.active')[0].lastElementChild.value; //Gets the type key value.
+						featureKeys[rowIndex - 1].value = keyValue; //Stores the default type key value in the data storage object. (First value in the list)
+					}
+
+					template.find('.feature-key-value').off().on('change', function(event) {
+						if (event.target.className === 'type') {
+							var valueRowIndex = $(this).find('.type').attr('name').match(numberPattern); //Gets the index value for the key value.
+							featureKeys[valueRowIndex - 1].value = event.target.value;
+						}
+
+						if (event.target.parentNode.dataset.type === 'speed_dial') {
+							if (event.target.className === 'sdName') {
+								speedDial.name = event.target.value;
+							}
+
+							if (event.target.className === 'sdNumber') {
+								var valueRowIndex = $(this).find('.sdNumber').attr('name').match(numberPattern); //Gets the index value for the key value.
+								speedDial.number = monster.util.unformatPhoneNumber(event.target.value);
+
+								speedDial.name === '' ? featureKeys[valueRowIndex - 1].value = speedDial.number + ':' + speedDial.number : featureKeys[valueRowIndex - 1].value = speedDial.name + ':' + speedDial.number;
+							}
+						}
+					});
+					$(this).siblings('.feature-key-value.active').removeClass('active'); //Remove the active status for this item.
+				});
+
+				template.find('#proceed').on('click', function() {
+					self.getDeviceFeatureKeyTotal(newUsers, featureKeys);
+
+					self.csvOnboardingRender();
+				});
+
+				template.find('#cancel').on('click', function() {
+					self.csvOnboardingRender();
+				});
+			});
+		},
+
+		getDeviceFeatureKeyTotal: function(newUsers, featureKeys) {
+			var self = this,
+				appData = {
+					deviceList: [],
+					users: newUsers.data,
+					featureKeys: featureKeys
+				};
+
+			_.each(appData.users, function(user) {
+				var device = {
+					brand: user.device.provision.endpoint_brand,
+					family: user.device.provision.endpoint_family,
+					model: user.device.provision.endpoint_model
+				};
+
+				//Check if the device info is in the list if nopt add it
+				self.getDeviceList(device, appData.deviceList);
+			});
+			//Make the API calls to get the number of feature keys allowed on a device.
+			self.getDeviceItteration(appData);
+		},
+
+		getDeviceItteration: function(appData) {
+			var self = this;
+
+			_.each(appData.deviceList, function(device) {
+				monster.request({
+					resource: 'data.template.feature_keys.iteration',
+					data: {
+						brand: device.brand,
+						family: device.family,
+						model: device.model
+					},
+					success: function(apiData, status) {
+						device.keys = apiData.data.template.feature_keys.iterate;
+						self.updateDeviceKeys(appData, device);
+					}
+				});
+			});
+		},
+
+		getDeviceList: function(device, deviceList) {
+			if (!deviceList.length) {
+				deviceList.push(device);
+			} else {
+				//Verify if the targeted device (deviceInfo) has been added to the device list (deviceModels).
+				//This is used narrow down the API calls to the provisioner to get the max feature keys that device can have.
+				_.each(deviceList, function(listDevice) {
+					var found = false;
+
+					device.brand === listDevice.brand ? found = true : found = false;
+					device.family === listDevice.family && found === true ? found = true : found = false;
+					device.model === listDevice.model && found === true ? found = true : found = false;
+
+					if (found === false) {
+						deviceList.push(device);
+					}
+				});
+			}
+		},
+
+		updateDeviceKeys: function(appData, currentDevice) {
+			var self = this;
+
+			//Get the device id and device model for each user.
+			_.each(appData.users, function(user) {
+				var userModel = user.device.provision.endpoint_model,
+					userDeviceMaxKeys = 0;
+
+				if (currentDevice.model === userModel) {
+					userDeviceMaxKeys = currentDevice.keys;
+
+					if (userDeviceMaxKeys < appData.featureKeys.length && userDeviceMaxKeys !== 0) {
+						var slicedFeatureKeys = appData.featureKeys.slice(0, userDeviceMaxKeys),
+							formattedKeys = {};
+
+						_.each(slicedFeatureKeys, function(line, key) {
+							if (line.type) {
+								delete line.index;
+								formattedKeys[key] = line;
+							}
+						});
+
+						user.device.provision.feature_keys = formattedKeys; //Add the formated feature keys to the data structure.
+						self.updateDevice(user);
+					}
+
+					if (userDeviceMaxKeys > appData.featureKeys.length) {
+						var slicedFeatureKeys = appData.featureKeys.slice(0),
+							formattedKeys = {};
+						
+						_.each(slicedFeatureKeys, function(line, key) {
+							if (line.type) {
+								delete line.index;
+								formattedKeys[key] = line;
+							}
+						});
+
+						user.device.provision.feature_keys = formattedKeys; //Add the formated feature keys to the data structure.
+						self.updateDevice(user);
+					}
+				}
+			});
+		},
+
+		updateDevice: function(data) {
+			var self = this;
+
+			self.callApi({
+				resource: 'device.update',
+				data: {
+					accountId: self.accountId,
+					data: data.device,
+					deviceId: data.device.id
+				},
+				error: function(data) {
+					monster.ui.alert('error', 'The feature keys were not applied to the new users.');
+				}
+			});
 		},
 
 		formatTaskData: function(columnsMatching, data) {
@@ -496,7 +728,6 @@ define(function(require) {
 				formattedData = {
 					fileName: data.fileName
 				};
-			console.log('formatTaskData data START', data);
 			_.each(data.records, function(record) {
 				formattedElement = {};
 
@@ -509,7 +740,6 @@ define(function(require) {
 				formattedRecords.push(formattedElement);
 			});
 			formattedData.data = formattedRecords;
-			//console.log('formatTaskData data END', formattedData.data);
 
 			return formattedData;
 		},
@@ -628,7 +858,7 @@ define(function(require) {
 					vmbox: {},
 					callflow: {}
 				};
-			//console.log('1 createSmartPBXUserDevice data', data);
+
 			self.callApi({
 				resource: 'user.create',
 				data: {
@@ -649,7 +879,6 @@ define(function(require) {
 							});
 						},
 						device: function(callback) {
-							console.log('Data', data);
 							if (data.rawData.brand !== 'none') { //Detects if there is a valid device.
 								self.createDevice(data.device, function(_dataDevice) { //Create device
 									callback(null, _dataDevice);
@@ -661,8 +890,6 @@ define(function(require) {
 						softphone: function(callback) {
 							if (data.rawData.softphone === 'yes') { //Detects if the user needs a softphone
 								self.createSoftPhone(data.user, function(_dataSoftPhone) { //Create softphone
-									//console.log('Softphone Data AFTER API CALL', _dataSoftPhone);
-									
 									callback(null, _dataSoftPhone);
 								});
 							} else {
@@ -670,7 +897,6 @@ define(function(require) {
 							}
 						}
 					}, function(err, results) {
-						//console.log('Results After API requests', results);
 						formattedResult.vmbox = results.vmbox;
 						formattedResult.device = results.device;
 						formattedResult.softphone = results.softphone;
@@ -694,7 +920,6 @@ define(function(require) {
 							$.extend(data.user, dirConstructor);
 
 							self.usersUpdateUser(data.user);
-							//console.log('3 formattedResult', formattedResult);
 							success(formattedResult);
 						});
 					});
@@ -751,7 +976,6 @@ define(function(require) {
 		},
 
 		createSoftPhone: function(data, callback) {
-			//console.log('createSoftPhone data', data);
 			var self = this,
 				formattedDeviceData = {
 					device_type: 'softphone',
@@ -764,8 +988,6 @@ define(function(require) {
 					}
 				};
 
-			//console.log('2 createSoftPhone formattedDeviceData', formattedDeviceData);
-			
 			self.callApi({
 				resource: 'device.create',
 				data: {
@@ -789,6 +1011,23 @@ define(function(require) {
 					data: user
 				},
 				success: function(data) {
+				}
+			});
+		},
+
+		getUsers: function(callback) {
+			var self = this;
+
+			self.callApi({
+				resource: 'user.list',
+				data: {
+					accountId: self.accountId,
+					filters: {
+						paginate: 'false'
+					}
+				},
+				success: function(data) {
+					callback(data.data);
 				}
 			});
 		},

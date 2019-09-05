@@ -25,6 +25,27 @@
 			}
 		},
 
+		"keys": {
+			"featureKeys": {
+				"title": "Feature Keys",
+				"label": "Feature key"
+			},
+			"info": {
+				"link": {
+					"showInfo": "Show Info",
+					"hideInfo": "Hide Info"
+				}
+			},
+			"labels": {
+				"name": "Name",
+				"number": "Number",
+				"user": "User",
+				"parkingSpot": "Park",
+				"value": "Value",
+				"slot": "Feature Key "
+			}
+		},
+
 		"review": {
 			"title": "Please review your imported file",
 			"proceed": "Proceed",
