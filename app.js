@@ -918,7 +918,7 @@ define(function(require) {
 
 							$.extend(dirConstructor.directories, dirID);
 							$.extend(data.user, dirConstructor);
-
+							
 							self.usersUpdateUser(data.user);
 							success(formattedResult);
 						});
@@ -1007,7 +1007,7 @@ define(function(require) {
 				resource: 'user.update',
 				data: {
 					accountId: self.accountId,
-					userId: user.userId,
+					userId: user.id,
 					data: user
 				},
 				success: function(data) {
