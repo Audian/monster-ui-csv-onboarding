@@ -237,6 +237,7 @@ define(function(require) {
 				resource: 'common.chooseModel.getProvisionerData',
 				data: {},
 				success: function(dataProvisioner) {
+					console.log('dataProvisioner', dataProvisioner);
 					self.findDeviceBrand(data, dataProvisioner, template);
 				}
 			});
@@ -278,16 +279,18 @@ define(function(require) {
 			var self = this,
 				deviceBrand = {},
 				brandError = 'brand';
-
+			//console.log('1 redcordData.records', redcordData.records);
+			//console.log('1 provisionerData', redcordData);
 			_.each(redcordData.records, function(record) {
 				if (record.brand !== '') {
 					deviceBrand = _.find(provisionerData.data, function(brand) { //Returns the device brand if it is a match.
 						record.brand = record.brand.toLowerCase();
-						brand.name === record.brand ? record.provision = true : record.provision = false; //Sets the provision status to true or false.
-						return brand.name === record.brand; //If there is a match it will return that brand.
+						brand.id === record.brand ? record.provision = true : record.provision = false; //Sets the provision status to true or false.
+						return brand.id === record.brand; //If there is a match it will return that brand.
 					});
 
 					if (record.brand !== 'none') { //Catches brands labeled as none so that the app does not throw an error or call findDeviceFamily.
+						//console.log('1 Is Provisioned?', record.provision);
 						if (record.provision === true) { //Verifies if the device is valid
 							self.findDeviceFamily(record, deviceBrand, template); //Calls the next function to verify the family.
 						} else {
@@ -295,6 +298,7 @@ define(function(require) {
 						}
 					}
 				} else {
+					//console.log('Device Feild Is Empty');
 					self.deviceInvalid(record, template, brandError); //If the brand field is empty it will throw an error.
 				}
 			});
@@ -321,12 +325,15 @@ define(function(require) {
 				deviceFamily = {},
 				familyError = 'family';
 
+			//console.log('2 record', record);
+			//console.log('2 brand', brand);
 			deviceFamily = _.find(brand.families, function(family) {
 				record.family = record.family.toLowerCase();
-				family.name === record.family ? record.provision = true : record.provision = false; //Sets the status to true or false.
-				return family.name === record.family;
+				family.id === record.family ? record.provision = true : record.provision = false; //Sets the status to true or false.
+				return family.id === record.family;
 			});
-
+			//console.log('2 deviceFamily', deviceFamily);
+			//console.log('2 Is Provisioned?', record.provision);
 			if (record.provision === true) {
 				self.findDeviceModel(record, deviceFamily, template);
 			} else {
@@ -339,8 +346,13 @@ define(function(require) {
 				modelError = 'model';
 			var models = Object.getOwnPropertyNames(family.models);
 
+			//console.log('3 record', record);
+			//console.log('3 family', family);
+
 			_.find(models, function(model) {
 				model === record.model ? record.provision = true : record.provision = false; //Sets the status to true or false.
+				//console.log('3 model', model);
+				//console.log('3 record.model', record.model);
 				return model === record.model;
 			});
 
@@ -554,18 +566,18 @@ define(function(require) {
 					$(this).siblings('.feature-key-value[data-type="' + type + '"]').addClass('active'); //Activate the value of the type.
 					$(this).siblings('.feature-key-value[data-type="' + type + '"]').removeClass('hidden');//Show the type
 
-					if (type === 'none') { //Catches types set to none and leaves them empty.
+					if (type === 'none' && featureKeys[rowIndex - 1].type !== undefined) { //Catches types set to none and leaves them empty.
 						$(this).siblings('.feature-key-value').addClass('hidden');
 
-						featureKeys[rowIndex - 1].type = 'none';
-						featureKeys[rowIndex - 1].value = '';
+						delete featureKeys[rowIndex - 1].type;
+						delete featureKeys[rowIndex - 1].value;
 					} else {
 						featureKeys[rowIndex - 1].type = keyTypeValue; //Stores the type value in the data storage object.
 
 						keyValue = $(this).siblings('.feature-key-value.active')[0].lastElementChild.value; //Gets the type key value.
 						featureKeys[rowIndex - 1].value = keyValue; //Stores the default type key value in the data storage object. (First value in the list)
 					}
-
+					console.log('Feature Keys', featureKeys);
 					template.find('.feature-key-value').off().on('change', function(event) {
 						if (event.target.className === 'type') {
 							var valueRowIndex = $(this).find('.type').attr('name').match(numberPattern); //Gets the index value for the key value.
@@ -615,10 +627,15 @@ define(function(require) {
 					model: user.device.provision.endpoint_model
 				};
 
-				//Check if the device info is in the list if nopt add it
-				self.getDeviceList(device, appData.deviceList);
+				//Check if the device info is in the list if not add it
+				if (!_.find(appData.deviceList, {model: device.model})) {
+					appData.deviceList.push(device);
+				}
 			});
+
+			console.log('appData.deviceList', appData.deviceList);
 			//Make the API calls to get the number of feature keys allowed on a device.
+			console.log('App Data', appData);
 			self.getDeviceItteration(appData);
 		},
 
@@ -639,26 +656,6 @@ define(function(require) {
 					}
 				});
 			});
-		},
-
-		getDeviceList: function(device, deviceList) {
-			if (!deviceList.length) {
-				deviceList.push(device);
-			} else {
-				//Verify if the targeted device (deviceInfo) has been added to the device list (deviceModels).
-				//This is used narrow down the API calls to the provisioner to get the max feature keys that device can have.
-				_.each(deviceList, function(listDevice) {
-					var found = false;
-
-					device.brand === listDevice.brand ? found = true : found = false;
-					device.family === listDevice.family && found === true ? found = true : found = false;
-					device.model === listDevice.model && found === true ? found = true : found = false;
-
-					if (found === false) {
-						deviceList.push(device);
-					}
-				});
-			}
 		},
 
 		updateDeviceKeys: function(appData, currentDevice) {
@@ -685,9 +682,7 @@ define(function(require) {
 
 						user.device.provision.feature_keys = formattedKeys; //Add the formated feature keys to the data structure.
 						self.updateDevice(user);
-					}
-
-					if (userDeviceMaxKeys > appData.featureKeys.length) {
+					} else if (userDeviceMaxKeys >= appData.featureKeys.length) {
 						var slicedFeatureKeys = appData.featureKeys.slice(0),
 							formattedKeys = {};
 						
