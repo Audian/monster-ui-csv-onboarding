@@ -238,6 +238,7 @@ define(function(require) {
 				data: {},
 				success: function(dataProvisioner) {
 					console.log('dataProvisioner', dataProvisioner);
+					console.log('data', data);
 					self.findDeviceBrand(data, dataProvisioner, template);
 				}
 			});
@@ -282,24 +283,24 @@ define(function(require) {
 			//console.log('1 redcordData.records', redcordData.records);
 			//console.log('1 provisionerData', redcordData);
 			_.each(redcordData.records, function(record) {
-				if (record.brand !== '') {
+				record.brand = record.brand.toLowerCase();
+				console.log('record.brand', record.brand);
+				console.log('type of brand', typeof record.brand);
+				console.log('Record', record);
+				if (record.brand.length && record.brand !== 'none') {
+					console.log('IN');
 					deviceBrand = _.find(provisionerData.data, function(brand) { //Returns the device brand if it is a match.
-						record.brand = record.brand.toLowerCase();
 						brand.id === record.brand ? record.provision = true : record.provision = false; //Sets the provision status to true or false.
 						return brand.id === record.brand; //If there is a match it will return that brand.
 					});
 
-					if (record.brand !== 'none') { //Catches brands labeled as none so that the app does not throw an error or call findDeviceFamily.
-						//console.log('1 Is Provisioned?', record.provision);
-						if (record.provision === true) { //Verifies if the device is valid
-							self.findDeviceFamily(record, deviceBrand, template); //Calls the next function to verify the family.
-						} else {
-							self.deviceInvalid(record, template, brandError); //Otherwise throws an error.
-						}
+					if (record.provision === true) { //Verifies if the device is valid
+						console.log('IN 2');
+						self.findDeviceFamily(record, deviceBrand, template); //Calls the next function to verify the family.
+					} else {
+						console.log('ERROR');
+						record.provision === false ? self.deviceInvalid(record, template, 'brand') : self.deviceInvalid(record, template, 'MAC Address'); //Otherwise throws an error.
 					}
-				} else {
-					//console.log('Device Feild Is Empty');
-					self.deviceInvalid(record, template, brandError); //If the brand field is empty it will throw an error.
 				}
 			});
 		},
@@ -325,12 +326,12 @@ define(function(require) {
 				deviceFamily = {},
 				familyError = 'family';
 
-			//console.log('2 record', record);
-			//console.log('2 brand', brand);
 			deviceFamily = _.find(brand.families, function(family) {
 				record.family = record.family.toLowerCase();
-				family.id === record.family ? record.provision = true : record.provision = false; //Sets the status to true or false.
-				return family.id === record.family;
+				console.log('family.name', family.name);
+				console.log('record.family', record.family);
+				family.name === record.family ? record.provision = true : record.provision = false; //Sets the status to true or false.
+				return family.name === record.family;
 			});
 			//console.log('2 deviceFamily', deviceFamily);
 			//console.log('2 Is Provisioned?', record.provision);
@@ -398,6 +399,7 @@ define(function(require) {
 		},
 
 		startProcess: function(data, customizations) {
+			console.log('startProcess data', data);
 			var self = this,
 				template = $(self.getTemplate({
 					name: 'progress',
@@ -493,6 +495,7 @@ define(function(require) {
 			};
 
 			_.each(results, function(result) {
+				console.log('5 result', result);
 				if (result.device !== undefined) {
 					featureKeyDevices.data.push(result);
 					featureKeyDevices.status = true;
@@ -874,7 +877,8 @@ define(function(require) {
 							});
 						},
 						device: function(callback) {
-							if (data.rawData.brand !== 'none') { //Detects if there is a valid device.
+							console.log('data.rawData.brand', data.rawData.brand);
+							if (data.rawData.brand && data.rawData.brand !== 'none') { //Detects if there is a valid device.
 								self.createDevice(data.device, function(_dataDevice) { //Create device
 									callback(null, _dataDevice);
 								});
