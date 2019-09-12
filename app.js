@@ -237,8 +237,6 @@ define(function(require) {
 				resource: 'common.chooseModel.getProvisionerData',
 				data: {},
 				success: function(dataProvisioner) {
-					console.log('dataProvisioner', dataProvisioner);
-					console.log('data', data);
 					self.findDeviceBrand(data, dataProvisioner, template);
 				}
 			});
@@ -278,27 +276,19 @@ define(function(require) {
 
 		findDeviceBrand: function(redcordData, provisionerData, template) {
 			var self = this,
-				deviceBrand = {},
-				brandError = 'brand';
-			//console.log('1 redcordData.records', redcordData.records);
-			//console.log('1 provisionerData', redcordData);
+				deviceBrand = {};
 			_.each(redcordData.records, function(record) {
 				record.brand = record.brand.toLowerCase();
-				console.log('record.brand', record.brand);
-				console.log('type of brand', typeof record.brand);
-				console.log('Record', record);
+
 				if (record.brand.length && record.brand !== 'none') {
-					console.log('IN');
 					deviceBrand = _.find(provisionerData.data, function(brand) { //Returns the device brand if it is a match.
 						brand.id === record.brand ? record.provision = true : record.provision = false; //Sets the provision status to true or false.
 						return brand.id === record.brand; //If there is a match it will return that brand.
 					});
 
 					if (record.provision === true) { //Verifies if the device is valid
-						console.log('IN 2');
 						self.findDeviceFamily(record, deviceBrand, template); //Calls the next function to verify the family.
 					} else {
-						console.log('ERROR');
 						record.provision === false ? self.deviceInvalid(record, template, 'brand') : self.deviceInvalid(record, template, 'MAC Address'); //Otherwise throws an error.
 					}
 				}
@@ -328,13 +318,10 @@ define(function(require) {
 
 			deviceFamily = _.find(brand.families, function(family) {
 				record.family = record.family.toLowerCase();
-				console.log('family.name', family.name);
-				console.log('record.family', record.family);
 				family.name === record.family ? record.provision = true : record.provision = false; //Sets the status to true or false.
 				return family.name === record.family;
 			});
-			//console.log('2 deviceFamily', deviceFamily);
-			//console.log('2 Is Provisioned?', record.provision);
+
 			if (record.provision === true) {
 				self.findDeviceModel(record, deviceFamily, template);
 			} else {
@@ -347,13 +334,8 @@ define(function(require) {
 				modelError = 'model';
 			var models = Object.getOwnPropertyNames(family.models);
 
-			//console.log('3 record', record);
-			//console.log('3 family', family);
-
 			_.find(models, function(model) {
 				model === record.model ? record.provision = true : record.provision = false; //Sets the status to true or false.
-				//console.log('3 model', model);
-				//console.log('3 record.model', record.model);
 				return model === record.model;
 			});
 
@@ -399,7 +381,6 @@ define(function(require) {
 		},
 
 		startProcess: function(data, customizations) {
-			console.log('startProcess data', data);
 			var self = this,
 				template = $(self.getTemplate({
 					name: 'progress',
@@ -495,7 +476,6 @@ define(function(require) {
 			};
 
 			_.each(results, function(result) {
-				console.log('5 result', result);
 				if (result.device !== undefined) {
 					featureKeyDevices.data.push(result);
 					featureKeyDevices.status = true;
@@ -580,7 +560,7 @@ define(function(require) {
 						keyValue = $(this).siblings('.feature-key-value.active')[0].lastElementChild.value; //Gets the type key value.
 						featureKeys[rowIndex - 1].value = keyValue; //Stores the default type key value in the data storage object. (First value in the list)
 					}
-					console.log('Feature Keys', featureKeys);
+
 					template.find('.feature-key-value').off().on('change', function(event) {
 						if (event.target.className === 'type') {
 							var valueRowIndex = $(this).find('.type').attr('name').match(numberPattern); //Gets the index value for the key value.
@@ -635,10 +615,7 @@ define(function(require) {
 					appData.deviceList.push(device);
 				}
 			});
-
-			console.log('appData.deviceList', appData.deviceList);
 			//Make the API calls to get the number of feature keys allowed on a device.
-			console.log('App Data', appData);
 			self.getDeviceItteration(appData);
 		},
 
@@ -877,7 +854,6 @@ define(function(require) {
 							});
 						},
 						device: function(callback) {
-							console.log('data.rawData.brand', data.rawData.brand);
 							if (data.rawData.brand && data.rawData.brand !== 'none') { //Detects if there is a valid device.
 								self.createDevice(data.device, function(_dataDevice) { //Create device
 									callback(null, _dataDevice);
