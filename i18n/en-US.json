@@ -3,7 +3,7 @@
 		"title": "CSV Onboarding",
 		"uploads": {
 			"mainTitle": "Fast SmartPBX Onboarding",
-			"subTitle": "Upload a CSV File with the following required columns: first_name, last_name, password, email, and, extension. Optional columns are mac_address, brand, family, model, and softphone. For a standardized CSV file, columns settings, and additional information ",
+			"subTitle": "Upload a CSV File with the following required columns: first_name, last_name, password, email, and, extension. Optional columns are phone_number, mac_address, brand, family, model, and softphone. For a standardized CSV file, columns settings, and additional information ",
 			"link": "click here",
 			"text": "Drag and drop your file here to upload, or browse your computer.",
 			"emptyOption": "",
