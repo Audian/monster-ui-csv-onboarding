@@ -238,10 +238,13 @@ define(function(require) {
 			self.callApi({
 				resource: 'numbers.list',
 				data: {
-					accountId: self.accountId
+					accountId: self.accountId,
+					filters: {
+						paginate: 'false'
+					}
 				},
 				success: function(data) {
-					if (data.page_size > 0) {
+					if (data.data.cascade_quantity > 0) {
 						_.each(data.data.numbers, function(num, key) {
 							if (num.hasOwnProperty('used_by') === false) {
 								numbersList.push(key.slice(1));
@@ -978,7 +981,7 @@ define(function(require) {
 
 							$.extend(dirConstructor.directories, dirID);
 							$.extend(data.user, dirConstructor);
-							
+
 							self.usersUpdateUser(data.user);
 							success(formattedResult);
 						});
