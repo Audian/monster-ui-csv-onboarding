@@ -113,6 +113,7 @@ define(function(require) {
 		bindUploadEvents: function(template) {
 			var self = this,
 				file,
+				locationId = null, //? Billing Location Addition
 				handleFileSelect = function(evt) {
 					file = evt.target.files[0];
 					onFileSelected(file);
@@ -151,6 +152,7 @@ define(function(require) {
 								var formattedData = {
 									fileName: file.name,
 									records: results.data,
+									locationId: locationId,  //? Billing Location Addition
 									columns: {
 										expected: {
 											mandatory: self.appFlags.csvOnboarding.columns.mandatory,
@@ -172,7 +174,16 @@ define(function(require) {
 			});
 
 			template.find('#proceed').on('click', function() {
-				addJob();
+				 //? Billing Location Addition
+				self.getLocationId(function(location_id) {
+					if (locationId === false) {
+						monster.ui.alert('error', 'Billing locations experienced an issue please try again.');
+						return;
+					} else {
+						locationId = location_id;
+						addJob();
+					}
+				});
 			});
 
 			template.find('.text-upload').on('click', function() {
@@ -259,7 +270,8 @@ define(function(require) {
 
 		bindReview: function(template, data) {
 			var self = this,
-				expectedColumns = data.columns.expected;
+				expectedColumns = data.columns.expected,
+				locationId = data.locationId || null; //? Billing Location Addition
 
 			monster.ui.footable(template.find('.footable'), {
 				filtering: {
@@ -288,10 +300,10 @@ define(function(require) {
 					if (numValidation.isValid) {
 						if (hasCustomizations) {
 							self.renderCustomizations(formattedData.data, function(customizations) {
-								self.startProcess(formattedData.data, customizations);
+								self.startProcess(formattedData.data, customizations, locationId); 
 							});
 						} else {
-							self.startProcess(formattedData.data, {});
+							self.startProcess(formattedData.data, {}, locationId);
 						}
 					// If the number validation is FALSE then generate the error message for the user.
 					} else {
@@ -427,7 +439,7 @@ define(function(require) {
 			}
 		},
 
-		createSmartPBXData: function(formattedData, customizations, onProgress) {
+		createSmartPBXData: function(formattedData, customizations, locationId, onProgress) {
 			var self = this,
 				parallelRequests = [],
 				totalRequests,
@@ -444,7 +456,7 @@ define(function(require) {
 					parallelRequests.push(function(callback) {
 						var data = self.formatUserData(record, customizations);
 
-						self.createSmartPBXUser(data, function(dataUser) {
+						self.createSmartPBXUser(data, locationId, function(dataUser) {
 							dataProgress = {
 								countFinishedRequests: countFinishedRequests++,
 								totalRequests: totalRequests
@@ -464,7 +476,26 @@ define(function(require) {
 			});
 		},
 
-		startProcess: function(data, customizations) {
+		getLocationId: function(callback) {  //? Billing Location Addition
+			var self = this;
+
+			if (monster.billing_locations) {
+				monster.pub('audian_commons.billingLocations.render', {
+					accountId: self.accountId,
+					type: 'get',
+					requestSuccessCallback: function (locationId) {
+						callback(locationId);
+					},
+					requestErrorCallback: function () {
+						callback(false);
+					}
+				});
+			} else {
+				callback(null);
+			}
+		},
+
+		startProcess: function(data, customizations, locationId) {
 			var self = this,
 				template = $(self.getTemplate({
 					name: 'progress',
@@ -477,7 +508,7 @@ define(function(require) {
 				.empty()
 				.append(template);
 
-			self.createSmartPBXData(data, customizations, function(user, progress) {
+			self.createSmartPBXData(data, customizations, locationId, function(user, progress) {
 				var percentFilled = Math.ceil((progress.countFinishedRequests / progress.totalRequests) * 100);
 				template.find('.count-requests-done').html(progress.countFinishedRequests);
 				template.find('.count-requests-total').html(progress.totalRequests);
@@ -909,7 +940,7 @@ define(function(require) {
 			return formattedData;
 		},
 
-		createSmartPBXUser: function(data, success, error) {
+		createSmartPBXUser: function(data, locationId, success, error) {
 			var self = this,
 				formattedResult = {
 					device: {},
@@ -920,6 +951,7 @@ define(function(require) {
 
 			self.callApi({
 				resource: 'user.create',
+				locationId: locationId,  //? Billing Location Addition
 				data: {
 					accountId: self.accountId,
 					data: data.user
@@ -933,13 +965,13 @@ define(function(require) {
 					data.device.owner_id = userId;
 					monster.parallel({
 						vmbox: function(callback) {
-							self.createVMBox(data.vmbox, function(_dataVM) {
+							self.createVMBox(data.vmbox, locationId, function(_dataVM) {
 								callback(null, _dataVM);
 							});
 						},
 						device: function(callback) {
 							if (data.rawData.brand && data.rawData.brand !== 'none') { //Detects if there is a valid device.
-								self.createDevice(data.device, function(_dataDevice) { //Create device
+								self.createDevice(data.device, locationId, function(_dataDevice) { //Create device
 									callback(null, _dataDevice);
 								});
 							} else {
@@ -948,7 +980,7 @@ define(function(require) {
 						},
 						softphone: function(callback) {
 							if (data.rawData.softphone === 'yes') { //Detects if the user needs a softphone
-								self.createSoftPhone(data.user, function(_dataSoftPhone) { //Create softphone
+								self.createSoftPhone(data.user, locationId, function(_dataSoftPhone) { //Create softphone
 									callback(null, _dataSoftPhone);
 								});
 							} else {
@@ -993,11 +1025,12 @@ define(function(require) {
 			});
 		},
 
-		createVMBox: function(data, callback) {
+		createVMBox: function(data, locationId, callback) {
 			var self = this;
 
 			self.callApi({
 				resource: 'voicemail.create',
+				locationId: locationId,  //? Billing Location Addition
 				data: {
 					accountId: self.accountId,
 					data: data
@@ -1023,11 +1056,12 @@ define(function(require) {
 			});
 		},
 
-		createDevice: function(data, callback) {
+		createDevice: function(data, locationId, callback) {
 			var self = this;
 
 			self.callApi({
 				resource: 'device.create',
+				locationId: locationId,  //? Billing Location Addition
 				data: {
 					accountId: self.accountId,
 					data: data
@@ -1038,7 +1072,7 @@ define(function(require) {
 			});
 		},
 
-		createSoftPhone: function(data, callback) {
+		createSoftPhone: function(data, locationId, callback) {
 			var self = this,
 				formattedDeviceData = {
 					device_type: 'softphone',
@@ -1053,6 +1087,7 @@ define(function(require) {
 
 			self.callApi({
 				resource: 'device.create',
+				locationId: locationId,  //? Billing Location Addition
 				data: {
 					accountId: self.accountId,
 					data: formattedDeviceData
