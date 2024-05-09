@@ -2,7 +2,8 @@ define(function(require) {
 	var $ = require('jquery'),
 		_ = require('lodash'),
 		monster = require('monster'),
-		Papa = require('papaparse');
+		Papa = require('papaparse'),
+		magpieSDK = require('magpieSDK');
 
 	var app = {
 		css: ['app'],
@@ -174,16 +175,23 @@ define(function(require) {
 			});
 
 			template.find('#proceed').on('click', function() {
-				 //? Billing Location Addition
-				self.getLocationId(function(location_id) {
-					if (locationId === false) {
-						monster.ui.alert('error', 'Billing locations experienced an issue please try again.');
-						return;
-					} else {
-						locationId = location_id;
-						addJob();
-					}
-				});
+				var hasMultiLocations = _.get(monster, 'billing_locations', false);
+
+				if (!hasMultiLocations) {
+					addJob();
+				} else {
+					//? Billing Location Addition
+					self.getLocationId(function(location_id) {
+						if (location_id === false) {
+							monster.ui.alert('error', 'A location is required in order to progress. Please select a location and try again');
+							self.csvOnboardingRender();
+							return;
+						} else {
+							locationId = location_id;
+							addJob();
+						}
+					});
+				}
 			});
 
 			template.find('.text-upload').on('click', function() {
@@ -456,7 +464,7 @@ define(function(require) {
 					parallelRequests.push(function(callback) {
 						var data = self.formatUserData(record, customizations);
 
-						self.createSmartPBXUser(data, locationId, function(dataUser) {
+						self.createSmartPBXUser(data, function(dataUser) {
 							dataProgress = {
 								countFinishedRequests: countFinishedRequests++,
 								totalRequests: totalRequests
@@ -471,28 +479,124 @@ define(function(require) {
 				totalRequests = parallelRequests.length;
 
 				monster.parallel(parallelRequests, function(err, results) {
-					self.showResults(results);
+					if (results && locationId !== null) {
+						self.assignLocations(results, locationId);
+					} else {
+						self.showResults(results);
+					}
 				});
 			});
 		},
 
+		assignLocations: function(results, locationId) {
+			var self = this, 
+				userIds = [],
+				deviceIds = [],
+				vmboxIds = [],
+				numbers = [];
+
+			_.each(results, function(result) {
+				if (typeof result.user !== 'undefined' && _.isString(result.user.id)) {
+					userIds.push(result.user.id);
+				}
+
+				if (typeof result.device !== 'undefined' && _.isString(result.device.id)) {
+					deviceIds.push(result.device.id);
+				}
+
+				if (typeof result.softphone !== 'undefined' && _.isString(result.softphone.id)) {
+					deviceIds.push(result.softphone.id);
+				}
+
+				if (typeof result.vmbox !== 'undefined' && _.isString(result.vmbox.id)) {
+					vmboxIds.push(result.vmbox.id);
+				}
+
+				if (typeof result.callflow !== 'undefined' && result.callflow.numbers.length > 0) {
+					_.each(result.callflow.numbers, function(number) {
+						if (monster.util.getFormatPhoneNumber(number).isValid) {
+							numbers.push(number);
+						}
+					});
+				}
+			});
+
+			monster.parallel({
+				user: function(callback) {
+					if (userIds.length > 0) {
+						magpieSDK.assignToLocation({
+							accountId: self.accountId,
+							locationId: locationId,
+							resource: 'users',
+							data: userIds
+						}, function(data, error) {
+							callback(error ? error : null, data);
+						});
+					} else {
+						callback(null, {});
+					}
+				},
+				devices: function(callback) {
+					if (deviceIds.length > 0) {
+						magpieSDK.assignToLocation({
+							accountId: self.accountId,
+							locationId: locationId,
+							resource: 'devices',
+							data: deviceIds
+						}, function(data, error) {
+							callback(error ? error : null, data);
+						});
+					} else {
+						callback(null, {});
+					}
+				},
+				numbers: function(callback) {
+					if (numbers.length > 0) {
+						magpieSDK.assignToLocation({
+							accountId: self.accountId,
+							locationId: locationId,
+							resource: 'numbers',
+							data: numbers
+						}, function(data, error) {
+							callback(error ? error : null, data);
+						});
+					} else {
+						callback(null, {});
+					}
+				},
+				vmbox: function(callback) {
+					if (vmboxIds.length > 0) {
+						magpieSDK.assignToLocation({
+							accountId: self.accountId,
+							locationId: locationId,
+							resource: 'vmbox',
+							data: vmboxIds
+						}, function(data, error) {
+							callback(error ? error : null, data);
+						});
+					} else {
+						callback(null, {});
+					}
+				},
+			}, function(err, magpie_results) {
+				self.showResults(results);
+			});
+		},
+
+		//? Get the billing location ID by rendering the location selection popup.
 		getLocationId: function(callback) {  //? Billing Location Addition
 			var self = this;
 
-			if (monster.billing_locations) {
-				monster.pub('audian_commons.billingLocations.render', {
-					accountId: self.accountId,
-					type: 'get',
-					requestSuccessCallback: function (locationId) {
-						callback(locationId);
-					},
-					requestErrorCallback: function () {
-						callback(false);
-					}
-				});
-			} else {
-				callback(null);
-			}
+			monster.pub('audian_commons.billingLocations.render', {
+				accountId: self.accountId,
+				type: 'get',
+				requestSuccessCallback: function (data) {
+					callback(data.data.locationId);
+				},
+				requestErrorCallback: function () {
+					callback(false);
+				}
+			});
 		},
 
 		startProcess: function(data, customizations, locationId) {
@@ -558,28 +662,7 @@ define(function(require) {
 
 		showResults: function(results) {
 			var self = this;
-			/*var self = this,
-				parent = $('#csv_onboarding_app_container'),
-				template = $(self.getTemplate({
-					name: 'results',
-					data: results
-				}));
 
-			monster.ui.footable(template.find('.footable'));
-
-			parent.find('.content-wrapper')
-					.empty()
-					.append(template);*/
-
-			/*{
-				provision: {
-					combo_keys: {
-						0: {type: "line"},
-						1: {type: "parking", value: "1"},
-						2: {type: "parking", value: "2"}
-					}
-				}
-			}*/
 			monster.ui.toast({
 				type: 'success',
 				message: 'Congratulations, you successfully imported data to this account!'
@@ -940,7 +1023,7 @@ define(function(require) {
 			return formattedData;
 		},
 
-		createSmartPBXUser: function(data, locationId, success, error) {
+		createSmartPBXUser: function(data, success, error) {
 			var self = this,
 				formattedResult = {
 					device: {},
@@ -951,7 +1034,7 @@ define(function(require) {
 
 			self.callApi({
 				resource: 'user.create',
-				locationId: locationId,  //? Billing Location Addition
+				skipLocations: true,
 				data: {
 					accountId: self.accountId,
 					data: data.user
@@ -965,13 +1048,13 @@ define(function(require) {
 					data.device.owner_id = userId;
 					monster.parallel({
 						vmbox: function(callback) {
-							self.createVMBox(data.vmbox, locationId, function(_dataVM) {
+							self.createVMBox(data.vmbox, function(_dataVM) {
 								callback(null, _dataVM);
 							});
 						},
 						device: function(callback) {
 							if (data.rawData.brand && data.rawData.brand !== 'none') { //Detects if there is a valid device.
-								self.createDevice(data.device, locationId, function(_dataDevice) { //Create device
+								self.createDevice(data.device, function(_dataDevice) { //Create device
 									callback(null, _dataDevice);
 								});
 							} else {
@@ -980,7 +1063,7 @@ define(function(require) {
 						},
 						softphone: function(callback) {
 							if (data.rawData.softphone === 'yes') { //Detects if the user needs a softphone
-								self.createSoftPhone(data.user, locationId, function(_dataSoftPhone) { //Create softphone
+								self.createSoftPhone(data.user, function(_dataSoftPhone) { //Create softphone
 									callback(null, _dataSoftPhone);
 								});
 							} else {
@@ -1025,12 +1108,12 @@ define(function(require) {
 			});
 		},
 
-		createVMBox: function(data, locationId, callback) {
+		createVMBox: function(data, callback) {
 			var self = this;
 
 			self.callApi({
 				resource: 'voicemail.create',
-				locationId: locationId,  //? Billing Location Addition
+				skipLocations: true,
 				data: {
 					accountId: self.accountId,
 					data: data
@@ -1056,12 +1139,12 @@ define(function(require) {
 			});
 		},
 
-		createDevice: function(data, locationId, callback) {
+		createDevice: function(data, callback) {
 			var self = this;
 
 			self.callApi({
 				resource: 'device.create',
-				locationId: locationId,  //? Billing Location Addition
+				skipLocations: true,
 				data: {
 					accountId: self.accountId,
 					data: data
@@ -1072,7 +1155,7 @@ define(function(require) {
 			});
 		},
 
-		createSoftPhone: function(data, locationId, callback) {
+		createSoftPhone: function(data, callback) {
 			var self = this,
 				formattedDeviceData = {
 					device_type: 'softphone',
@@ -1087,7 +1170,7 @@ define(function(require) {
 
 			self.callApi({
 				resource: 'device.create',
-				locationId: locationId,  //? Billing Location Addition
+				skipLocations: true,
 				data: {
 					accountId: self.accountId,
 					data: formattedDeviceData
