@@ -1,276 +1,89 @@
 @import "../../../css/partials/base";
-/********************** FILTERING PANEL *********************/
-/************************************************************/
-#csv_onboarding_app_container .content-wrapper {
-    margin: 0 auto;
-    max-width: 1200px;
-    background-color: #fff;
-    border: 1px solid #c0c0c9;
-    border-radius: 2px;
-    padding: 20px;
-    position: relative;
-}
+@import "./layout.scss";
+@import "./table.scss";
+@import "./uploadPage.scss";
+@import "./reviewPage.scss";
+@import "./featureKeys.scss";
 
-#csv_onboarding_app_container #uploads .upload-frame {
-	background: #fafafa none repeat scroll 0 0;
-	border: 1px dashed #c0c0c9;
-	margin: 20px 0;
-	padding: 50px 0;
-	text-align: center;
-}
+#audian_csv_app {
+	height: calc(100vh - 67px);
+	background-color: $dm-5;
 
-#csv_onboarding_app_container #uploads .upload-frame.hover {
-	background: #ddd;
-	border: 1px dashed #333;
-}
+	h2 {
+		color: $dm-font-1;
+	}
 
-#csv_onboarding_app_container #uploads .select-job label {
-	display: inline-block;
-	margin: 0 20px 0 0;
-}
+	h5 {
+		color: $dm-font-2;
+	}
 
-#csv_onboarding_app_container #uploads .select-job select {
-	margin: 0;
-}
+	label,
+	span,
+	p {
+		color: $dm-font-1;
+		margin-bottom: unset;
+	}
 
-#csv_onboarding_app_container #uploads .upload-frame i {
-	color: #aaa;
-	font-size: 136px;
-	margin-bottom: 15px;
-}
+	span {
+		&.text-size {
+			&.sm {
+				font-size: 10px;
+			}
+		}
+	}
 
-#csv_onboarding_app_container #uploads .actions {
-	text-align: right;
-}
+	select {
+		border-radius: 5px;
+		margin-bottom: unset;
+	}
 
-#csv_onboarding_app_container #uploads .actions > * {
-	margin-left: 15px;
-}
+	.toCapitalize {
+		text-transform: capitalize;
+	}
+	
+	.flex {
+		&.flex-column {
+			display: flex;
+			flex-direction: column;
+		}
 
-#csv_onboarding_app_container #uploads #upload_csv_file {
-	display: none;
-}
+		&.flex-row {
+			display: flex;
+			flex-direction: row;
+		}
 
-#csv_onboarding_app_container #uploads .selected-file {
-	display: none;
-	background: #fff;
-	border: 1px solid #33db24;
-	margin: 20px 0;
-	padding: 50px 0;
-	text-align: center;
-}
+		&.justify-center {
+			justify-content: center;
+		}
 
-#csv_onboarding_app_container #uploads .selected-file i {
-	font-size: 136px;
-	margin-bottom: 15px;
-}
+		&.align-center {
+			align-items: center;
+		}
 
-#csv_onboarding_app_container #uploads .selected-file .file-name {
-	font-weight: bold;
-}
+		&.space-between {
+			justify-content: space-between;
+		}
+	}
 
-#csv_onboarding_app_container #uploads .selected-file .undo-upload {
-	margin-left: 10px;
-}
+	.row {
+		margin-left: unset;
+	}
 
-#csv_onboarding_app_container #uploads .help-selection {
-	display: none;
-	margin: 15px 0;
-}
-
-#csv_onboarding_app_container #uploads .help-selection .title {
-	display: inline-block;
-	font-weight: bold;
-	margin-right: 15px;
-	vertical-align: top;
-	width: 150px;
-}
-
-#csv_onboarding_app_container #uploads .help-selection .doc-section .content {
-	display: inline-block;
-	white-space: pre-wrap;
-	word-break: break-all;
-	word-wrap: break-word;
-	line-height: 20px;
-}
-
-/* Review */
-#csv_onboarding_app_container #review .review-table-wrapper {
-	margin-top: 15px;
-	overflow: auto;
-}
-
-#csv_onboarding_app_container #review .review-table-wrapper .column-data {
-	text-transform: none;
-}
-
-#csv_onboarding_app_container #review .actions {
-	margin-top: 15px;
-	text-align: right;
-}
-
-#csv_onboarding_app_container #review .actions > * {
-	margin-left: 15px;
-}
-
-#csv_onboarding_app_container #review .highlight {
-	font-weight: bold;
-}
-
-#csv_onboarding_app_container #review .column-selector {
-	width: 150px;
-}
-
-/* Progress */
-#csv_onboarding_app_container {
-	text-align: center;
-}
-
-#csv_onboarding_app_container .main-title {
-	font-size: 32px;
-	margin-top: 15px;
-}
-
-#csv_onboarding_app_container .sub-title {
-	color: #808089;
-	font-style: italic;
-	margin-top: 30px;
-}
-
-#csv_onboarding_app_container .spinner-wrapper {
-	margin-top: 20px;
-}
-
-#csv_onboarding_app_container .progress-display {
-	margin-top: 20px;
-}
-
-#csv_onboarding_app_container .progress-bar {
-	display: block;
-	border: 1px solid $panel-border-color;
-	width: 200px;
-	margin: 10px auto;
-	height: 30px;
-	border-radius: 2px;
-}
-
-#csv_onboarding_app_container .inner-progress-bar {
-	height: 100%;
-	width: 0px;
-	background: $primary-color;
-}
-
-
-/* Customizations */
-#csv_onboarding_app_container .customization-columns-wrapper {
-	display: flex;
-	margin-top: 30px;
-}
-
-#csv_onboarding_app_container .customization-columns-wrapper > div {
-	flex: 1;
-}
-
-#csv_onboarding_app_container .column-input {
-	display: flex;
-	flex-direction: column;
-	padding-left: 20px;
-	padding-right: 20px;
-	margin-top: 5px;
-	height: 300px;
-}
-
-#csv_onboarding_app_container .column-input textarea {
-	height: 250px;
-	padding: 0;
-	width: 100%;
-}
-
-#csv_onboarding_app_container .column-input .json-result {
-	text-align: left;
-}
-
-/* Feature Keys */
-#csv_onboarding_app_container #add_feature_keys .title {
-	font-size: 20px;
-	margin-bottom: 10px;
-}
-
-#csv_onboarding_app_container #add_feature_keys .control-group .feature-key-index {
-	margin-right: 10px;
-}
-
-#csv_onboarding_app_container #add_feature_keys .control-group {
-	height: 30px;
-	text-align: left;
-	margin-left: 30%;
-}
-
-#csv_onboarding_app_container #add_feature_keys .control-group .feature-key-value {
-	display: inline-block;
-}
-
-#csv_onboarding_app_container #add_feature_keys .control-group .feature-key-value .span1 {
-	margin-left: 7px;
-	width: 150px;
-}
-
-#csv_onboarding_app_container #add_feature_keys .control-group .feature-key-value .span1.parking {
-	width: 50px;
-}
-
-#csv_onboarding_app_container #add_feature_keys .control-group .feature-key-value > label {
-	margin-left: 10px;
-	display: inline-block;
-	width: 55px;
-}
-
-#csv_onboarding_app_container #add_feature_keys .control-group .feature-key-value .type-label {
-	width: 40px;
-}
-
-#csv_onboarding_app_container #add_feature_keys .control-group .chosen-feature-key-user {
-	width: 200px;
-}
-
-#csv_onboarding_app_container #add_feature_keys .control-group .feature-key-number {
-	display: inline-block;
-}
-
-#csv_onboarding_app_container #add_feature_keys .control-group .control-label {
-	width: 160px;
-	height: 20px;
-	display: inline-block;
-	padding-top: 5px;
-	text-align: right;
-}
-
-// Feature Key Input Box Sizes
-#csv_onboarding_app_container #add_feature_keys .controls .feature-key-type {
-	width: 145px;
-}
-
-#csv_onboarding_app_container #add_feature_keys .controls .feature-key-value[data-type="presence"] > select,
-#csv_onboarding_app_container #add_feature_keys .controls .feature-key-value[data-type="personal_parking"] > select {
-	width: 150px;
-}
-
-#csv_onboarding_app_container #add_feature_keys .controls .feature-key-value[data-type="parking"] > select {
-	width: 55px;
-}
-
-#csv_onboarding_app_container #add_feature_keys .control-group .feature-key-value .sdName {
-	width: 136px;
-}
-
-#csv_onboarding_app_container #add_feature_keys .control-group .feature-key-value .sdNumber {
-	width: 80px;
-}
-
-// Feature Key Input and Dropdown formatting
-#csv_onboarding_app_container #add_feature_keys .controls .feature-key-value > label,
-#csv_onboarding_app_container #add_feature_keys .controls .feature-key-value > input,
-#csv_onboarding_app_container #add_feature_keys .controls .feature-key-value > select,
-#csv_onboarding_app_container #add_feature_keys .controls > select {
-	margin-bottom: unset;
+	.loading-container {
+		width: 100%;
+		background-color: #f3f3f3;
+		border: 1px solid #ccc;
+		border-radius: 5px;
+		margin: 10px 0px;
+		overflow: hidden;
+		position: relative;
+		height: 30px;
+	}
+	
+	.loading-bar {
+		width: 0;
+		height: 100%;
+		background-color: #4caf50;
+		transition: width 0.3s;
+	}
 }

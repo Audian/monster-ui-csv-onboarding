@@ -1,0 +1,114 @@
+<div class="review-table-wrapper">
+    <div class="table-header">
+        <div class="cell user-info">
+            <span>{{i18n.csv_app.labels.users}}</span>
+        </div>
+
+        <div class="cell user-devices">
+            <span>{{i18n.csv_app.labels.devices}}</span>
+        </div>
+
+        <div class="cell user-settings">
+            <span>{{i18n.csv_app.labels.user_settings}}</span>
+        </div>
+
+        {{#compare tableType "===" "error"}}
+        <div class="cell user-errors">
+            <span>{{i18n.csv_app.labels.errors}}</span>
+        </div>
+        {{/compare}}
+
+        {{#compare tableType "===" "success"}}
+        <div class="cell user-notes">
+            <span>{{i18n.csv_app.labels.user_notes}}</span>
+        </div>
+        {{/compare}}
+    </div>
+
+    <div class="table-body">
+        {{#each users}}
+        <div class="table-row">
+            <div class="user-info cell">
+                <div class="info-wrapper">
+                    <span class="info-label">{{@root.i18n.csv_app.labels.name}}: </span> 
+                    <span class="info-value">{{this.user.first_name}} {{this.user.last_name}}</span>
+                </div>
+
+                <div class="info-wrapper">
+                    <span class="info-label">{{@root.i18n.csv_app.labels.email}}: </span> 
+                    <span class="info-value">{{this.user.email}}</span>
+                </div>
+
+                <div class="info-wrapper">
+                    <span class="info-label">{{@root.i18n.csv_app.labels.extensions}}: </span> 
+                    <span class="info-value">{{this.extras.exts}}</span>
+                </div>
+
+                <div class="info-wrapper">
+                    <span class="info-label">{{@root.i18n.csv_app.labels.phone_numbers}}: </span> 
+                    <span class="info-value">{{this.extras.numbers}}</span>
+                </div>
+
+                <div class="info-wrapper">
+                    <span class="info-label">{{@root.i18n.csv_app.labels.password}}: </span> 
+                    <span class="info-value">{{this.user.password}}</span>
+                </div>
+            </div>
+
+            <div class="user-devices cell">
+                {{#each this.user.hardware}}
+                <div class="hardware-info">
+                    <div class="info-wrapper">
+                        <span class="info-label">{{@root.i18n.csv_app.labels.model}}: </span> 
+                        <span class="info-value">{{this.brand}} {{this.family}} {{this.model}}</span>
+                    </div>
+
+                    <div class="info-wrapper">
+                        <span class="info-label">{{@root.i18n.csv_app.labels.mac}}: </span> 
+                        <span class="info-value">{{this.mac_address}}</span>
+                    </div>
+                </div>
+                {{/each}}
+            </div>
+
+            <div class="user-settings cell">
+                <div class="info-wrapper">
+                    <span class="info-label">{{@root.i18n.csv_app.labels.include_vm_box}}: </span> 
+                    <span class="info-value">{{#if this.user.include_voicemail}}Yes{{else}}No{{/if}}</span>
+                </div>
+
+                <div class="info-wrapper">
+                    <span class="info-label">{{@root.i18n.csv_app.labels.include_in_directory}}: </span> 
+                    <span class="info-value">{{#if this.user.in_directory}}Yes{{else}}No{{/if}}</span>
+                </div>
+
+                <div class="info-wrapper">
+                    <span class="info-label">{{@root.i18n.csv_app.labels.seat_type}}: </span> 
+                    <span class="info-value">{{this.user.seat_type}}</span>
+                </div>
+
+                <div class="info-wrapper">
+                    <span class="info-label">{{@root.i18n.csv_app.labels.do_not_bill}}: </span> 
+                    <span class="info-value">{{#if this.user.do_not_bill}}True{{else}}False{{/if}}</span>
+                </div>
+            </div>
+
+            {{#compare @root.tableType "===" "error"}}
+            <div class="user-errors cell">
+                <ul>
+                    {{#each this.errors}}
+                    <li>{{this}}</li>
+                    {{/each}}
+                </ul>
+            </div>
+            {{/compare}}
+
+            {{#compare @root.tableType "===" "success"}}
+            <div class="user-notes cell">
+                <span>{{this.user.custom_notes}}</span>
+            </div>
+            {{/compare}}
+        </div>
+        {{/each}}
+    </div>
+</div>
