@@ -22,8 +22,6 @@ define(function (require) {
 
                 App.Users = users_data;
 
-                console.log('Users:', App.Users);
-
                 // 3 - Render Templates
                 var template = $(App.getTemplate({
                     name: 'review-page',

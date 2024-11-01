@@ -50,24 +50,51 @@ define(function (require) {
             function renderReviewPage() {
                 if (file) {
                     Papa.parse(file, {
-                        delimiter: ',',
-                        header: true,
                         skipEmptyLines: true,
-                        trim: true,
-                        complete: function (results) {
-                            var cleanedData = results.data.filter(function (row) {
-                                // Filter out rows where all fields are empty, null, or only whitespace
-                                return Object.keys(row).some(function (key) {
-                                    var value = row[key];
-                                    return value && value.trim() !== '';
-                                });
+                        preview: 3,
+                        complete: function (results) { //? Parsing the first 3 rows to determine where the header is. One version of the CSV file has the header in the 3rd row.
+                            var rows = results.data,
+                                startRow = 0;
+
+                            _.each(rows, function (row, index) {
+                                if (isHeaderRow(row)) {
+                                    startRow = index;
+                                }
                             });
 
-                            App._records = cleanedData;
-                            App.locationId = locationId;  //? Billing Location Addition
+                            function isHeaderRow(row) {
+                                return row.includes('first_name') && row.includes('last_name') && row.includes('email');
+                            }
 
-                            ReviewPage.render(App);
-                        }
+                            Papa.parse(file, { //? Parsing the entire file with the correct header row.
+                                header: true,
+                                skipEmptyLines: true,
+                                beforeFirstChunk: function(chunk) {
+                                    // Split the data into rows
+                                    var rows = chunk.split(/\r\n|\n/);
+
+                                    // Remove the rows before the header row
+                                    rows.splice(0, startRow);
+                
+                                    // Rejoin the rows
+                                    return rows.join("\n");
+                                },
+                                complete: function (results) {
+                                    var cleanedData = results.data.filter(function (row, index) {
+                                         // Filter out rows where all fields are empty, null, or only whitespace
+                                         return Object.keys(row).some(function (key) {
+                                            var value = row[key];
+                                            return value && value.trim() !== '';
+                                        });
+                                    });
+        
+                                    App._records = cleanedData;
+                                    App.locationId = locationId;  //? Billing Location Addition
+        
+                                    ReviewPage.render(App);
+                                }
+                            });
+                        },
                     });
                 }
             }
