@@ -1,0 +1,44 @@
+<div class="page" id="uploads">
+	<div class="upload-title">
+		<h2>{{i18n.csv_app.uploads.mainTitle}}</h2>
+		<h5>{{i18n.csv_app.uploads.sub1}}</h5>
+		<h5>{{i18n.csv_app.uploads.sub2}} 
+			<a href="https://audian.atlassian.net/wiki/spaces/SUPD/pages/1578616/CSV+Onboarding+App?src=search" target="_blank">{{i18n.csv_app.uploads.link}}</a>
+		</h5>
+	</div>
+	<div class="upload-frame">
+		<i class="fa fa-upload"></i>
+
+		<div class="text-upload">
+			<p href="javascript:void(0);">{{i18n.csv_app.uploads.text}}</p>
+		</div>
+
+		<input type="file" id="upload_csv_file" class="file-input" style="position: absolute; left: -9999px;">
+	</div>
+
+	<div class="selected-file" data-type='success'>
+		<div class="upload-wrapper">
+			<i class="fa fa-check monster-green"></i>
+
+			<div class="upload-text">
+				<p class="first-line">{{ i18n.csv_app.uploads.success.headline}}</p>
+				<p class="second-line">{{ i18n.csv_app.uploads.success.subline}} <span class="file-name"></span></p>
+			</div>
+		</div>
+	</div>
+
+	<div class="selected-file" data-type="error">
+		<div class="upload-wrapper">
+			<i class="fa fa-warning monster-red"></i>
+
+			<div class="upload-text">
+				<p class="first-line">{{i18n.csv_app.uploads.errors.line1}}</p>	
+				<p class="second-line">{{i18n.csv_app.labels.file}}: <span class="file-name"></span></p>
+			</div>
+		</div>
+	</div>
+
+	<div class="actions">
+		<button disabled id="proceed" class="start-job-action monster-button-secondary">{{ i18n.csv_app.uploads.proceed }}</button>
+	</div>
+</div>

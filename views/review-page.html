@@ -1,0 +1,44 @@
+<div class="page" id="review">
+	<div class="tabbable">
+		<ul class="nav nav-tabs">
+			<li class={{#unless hasErrors}}"active"{{/unless}}><a href="#success_tab" data-toggle="tab">{{i18n.csv_app.labels.validUsers}}</a></li>
+
+			{{#if hasErrors}}
+			<li class={{#if hasErrors}}"active"{{/if}}><a href="#error_tab" data-toggle="tab">{{i18n.csv_app.labels.invalidUsers}}</a></li>
+			{{/if}}
+			
+			<span class="status-text">
+				{{#if hasErrors}}
+				{{i18n.csv_app.review.header.error}}
+				{{else}}
+				{{i18n.csv_app.review.header.success}}
+				{{/if}}
+			</span>
+		</ul>
+		
+		<div class="tab-content">
+			<div class="tab-pane success-tab {{#unless hasErrors}}active{{/unless}}" id="success_tab">
+				<div class="success-content">
+					<div class="empty-pane">
+						<i class="fa fa-exclamation-circle"></i>
+						<h4>{{i18n.csv_app.review.header.noValidUsers}}</h4>
+					</div>
+				</div>
+				
+			</div>
+			<div class="tab-pane error-tab {{#if hasErrors}}active{{/if}}" id="error_tab">
+				<div class="error-content">
+					<div class="empty-pane">
+						<i class="fa fa-check-circle-o"></i>
+						<h4>{{i18n.csv_app.review.header.noInvalidUsers}}</h4>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="actions">
+		<button id="cancel" class="monster-button">{{ i18n.cancel }}</button>
+		<button id="proceed" class="monster-button-success {{#if hasErrors}}disabled{{/if}}">{{i18n.csv_app.review.create}}</button>
+	</div>
+</div>
