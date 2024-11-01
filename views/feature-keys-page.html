@@ -1,0 +1,99 @@
+<div class="page" id="feature_keys">
+    <div class="groups flex flex-column">
+        {{#each groups }}
+        <div class="group flex flex-row">
+            <div class="feature-keys flex flex-column">
+                {{#each this.keys}}
+                <div class="row flex flex-row align-center" data-row="{{this.index}}">
+                    <span class="key-label">{{@root.i18n.csv_app.keys.featureKey}} {{this.index}} </span>
+                    
+                    <select class="key-type">
+                        {{#each @root.keyTypes}}
+                        <option value="{{@key}}">{{this}}</option>
+                        {{/each}}
+                    </select>
+
+                    <div class="type-value-container parking" data-type="parking">
+                        <label class="type-label>">{{@root.i18n.csv_app.keys.spot}}: </label>
+                        <select class="type-value">
+                            {{#each @root.parkingSpots}}
+                            <option value="{{this}}">{{this}}</option>
+                            {{/each}}
+                        </select>
+                    </div>
+
+                    <div class="type-value-container presence" data-type="presence">
+                        <label class="type-label>">{{@root.i18n.csv_app.keys.user}}: </label>
+                        <select class="type-value">
+                            {{#each @root.userOptions}}
+                            <option value="{{this.id}}">{{this.name}}</option>
+                            {{/each}}
+                        </select>
+                    </div>
+
+                    <div class="type-value-container personal" data-type="personal_parking">
+                        <label class="type-label>">{{@root.i18n.csv_app.keys.user}}: </label>
+                        <select class="type-value">
+                            {{#each @root.userOptions}}
+                            <option value="{{this.id}}">{{this.name}}</option>
+                            {{/each}}
+                        </select>
+                    </div>
+
+                    <div class="type-value-container speedDial" data-type="speed_dial">
+                        <div class="flex flex-row align-center">
+                            <label class="type-label>">{{@root.i18n.csv_app.keys.name}}: </label>
+                            <input class="type-value" type="text"></input>
+                        </div>
+
+                        <div class="flex flex-row align-center">
+                            <span class="type-label>">{{@root.i18n.csv_app.keys.number}}: </span>
+                            <input class="type-value-number" type="text"></input>
+                        </div>
+                    </div>
+                </div>
+                {{/each}}
+            </div>
+
+            <div class="flex flex-column">
+                <div class="supported-devices">
+                    <div class="section-label">
+                        <span>{{@root.i18n.csv_app.keys.keyLimit}}</span>
+
+                        {{#compare @index "!==" 0}}
+                        <span class="text-size sm">{{@root.i18n.csv_app.keys.keyLimitSub}}.</span>
+                        {{/compare}}
+                    </div>
+
+                    <ul class="devices">
+                        {{#each this.devices}}
+                        <li class="device-name">{{this}}</li>
+                        {{/each}}
+                    </ul>
+                </div>
+
+                {{#if @root.hasUnsupportedDevices}}
+                {{#compare @index "===" 0}}
+                <div class="unsupported-devices">
+                    <div class="section-label">
+                        <span>{{@root.i18n.csv_app.keys.unsupported}}</span>
+                        <span class="text-size sm">{{@root.i18n.csv_app.keys.unsupportedSub}}</span>
+                    </div>
+
+                    <ul class="devices">
+                        {{#each @root.unsupportedDevices}}
+                        <li class="device-name">{{this}}</li>
+                        {{/each}}
+                    </ul>
+                </div>
+                {{/compare}}
+                {{/if}}
+            </div>
+        </div>
+        {{/each}}
+    </div>
+
+    <div class="actions">
+        <button id="add_keys" class="monster-button-success">{{i18n.csv_app.keys.addKeys}}</button>
+    </div>
+</div>

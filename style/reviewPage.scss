@@ -1,0 +1,68 @@
+@import "../../../css/partials/base";
+
+#audian_csv_app {
+    #review {
+        overflow: auto;
+        max-width: 1200px;
+
+        .nav-tabs {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+
+            li {
+                margin-right: 10px;
+            }
+
+            .status-text {
+                font-size: large;
+                margin-left: auto;
+                color: $dm-font-1;
+            }
+        }
+
+        .tab-content {
+            background-color: $dm-4;
+            border: unset;
+            border-radius: 10px;
+
+            .empty-pane {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                height: 100%;
+                padding: 10px;
+                color: $dm-font-1;
+                background-color: $dm-2;
+                border: 1.5px solid $dm-border-3;
+                border-radius: 10px;
+
+
+                i {
+                    font-size: 100px;
+
+                    &.fa-check-circle-o {
+                        color: $success-color;
+                    }
+
+                    &.fa-exclamation-circle {
+                        color: $warning-color;
+                    }
+                }
+            }
+        }
+
+        .review-table-wrapper {
+            max-height: calc(100vh - 100px);
+            overflow: hidden;
+        }
+    }
+
+    .actions {
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-end;
+        align-items: center;
+    }
+}

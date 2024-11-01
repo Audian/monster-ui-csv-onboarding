@@ -1,86 +1,81 @@
 {
-	"csvOnboarding": {
-		"title": "CSV Onboarding",
+	"csv_app": {
+		"labels": {
+			"users": "Users",
+			"devices": "Devices",
+			"user_settings": "User Settings",
+			"errors": "Errors",
+			"user_notes": "User Notes",
+			"name": "Name",
+			"email": "Email",
+			"extensions": "Extensions",
+			"extension": "Extension",
+			"phone_numbers": "Phone Numbers",
+			"password": "Password",
+			"model": "Model",
+			"mac": "MAC Address",
+			"include_vm_box": "Include Voicemail Box",
+			"include_in_directory": "Include in Directory",
+			"seat_type": "Seat Type",
+			"do_not_bill": "Do Not Bill",
+			"file": "File",
+			"validUsers": "Valid Users",
+			"invalidUsers": "Invalid Users",
+			"createStatus": "Creation Status",
+			"loading": "Creating resources....",
+			"created": "Created",
+			"failed": "Failed",
+			"user": "User",
+			"vmbox": "Voicemail Box",
+			"callflow": "Callflow",
+			"directory": "Directory",
+			"notes": "Notes"
+		},
+
 		"uploads": {
-			"mainTitle": "Fast SmartPBX Onboarding",
-			"subTitle": "Upload a CSV File with the following required columns: first_name, last_name, password, email, and, extension. Optional columns are phone_number, mac_address, brand, family, model, and softphone. For a standardized CSV file, columns settings, and additional information ",
-			"link": "click here",
+			"mainTitle": "Audian SmartPBX Onboarding",
+			"sub1": "This tool allows you to upload a CSV file to create users and devices quickly.",
+			"sub2": "For more information or need the CSV template, please",
+			"link": "click here.",
 			"text": "Drag and drop your file here to upload, or browse your computer.",
-			"emptyOption": "",
-			"start": "Start Job",
 			"success": {
 				"headline": "You successfully uploaded a CSV file, please click on Proceed to continue!",
 				"subline": "File Uploaded:"
 			},
 			"proceed": "Proceed",
-			"undo": "Undo",
 			"errors": {
-				"wrongType": "Invalid type, we only accept CSV files and we received: {{type}}",
-				"message": "Error: Invalid {{error}} - User {{fName}} {{lName}}. Please assign a valid {{error}} for the user. If this is a valid {{error}} please contact support or build the user manually."
-			},
-			"helpSelection": {
-				"doc": "Additional Information",
-				"description": "Description",
-				"requiredColumns": "Required Columns",
-				"optionalColumns": "Optional Columns"
-			}
-		},
-
-		"keys": {
-			"featureKeys": {
-				"title": "Feature Keys",
-				"label": "Feature key"
-			},
-			"info": {
-				"link": {
-					"showInfo": "Show Info",
-					"hideInfo": "Hide Info"
-				}
-			},
-			"labels": {
-				"name": "Name",
-				"number": "Number",
-				"user": "User",
-				"parkingSpot": "Park",
-				"value": "Value",
-				"slot": "Feature Key "
+				"line1": "Error: Could not load file or file is not a vaild .csv file"
 			}
 		},
 
 		"review": {
-			"title": "Please review your imported file",
-			"proceed": "Proceed",
-			"headline": {
-				"first": "You are trying to import: ",
-				"second": "Number of records in this file: ",
-				"third": "We selected the first 5 records to help you review the mappings below and check to make sure they are correct. Once you've approved or fixed the mappings, go ahead and submit the import job."
+			"header": {
+				"success": "The CSV looks good, please review the users before proceeding.",
+				"error": "It looks like there are some errors on the CSV! You will need to fix them before you can proceed.",
+				"noValidUsers": "No Valid Users Found!",
+				"noInvalidUsers": "No Invalid Users Found!"
 			},
-			"errors": {
-				"title": "It appears that the columns matching didn't go as expected, please fix the following issues:",
-				"missing": "Column missing",
-				"tooMany": "Column selected more than once"
-			},
-			"columns": {
-				"mandatory": "Required Columns",
-				"optional": "Optional Columns",
-				"others": "Others"
-			},
-			"hasCustomizations": "Do you want to add JSON configs?"
+			"create": "Create"
 		},
 
-		"progress": {
-			"title": "Your CSV Import is in progress!",
-			"subTitle": "Please wait on this page as the data is loaded into the system. Closing the tab or leaving this page will terminate the import.",
-			"usersCreated": "Users Created: "
+		"creation": {
+			"header": "Creation Summary",
+			"headerSub": "Below shows the results show all users and resources created. Failed rows will be display at the top and noted with failed icons.",
+			"actionNote": "The creation process is complete, but if you want to add feature keys to your devices click this button.",
+			"button": "Add Device Feature Keys"
 		},
 
-		"customizations": {
-			"title": "Customize User, Device, Voicemail Boxes",
-			"subTitle": "Paste a JSON Payload in the area below, and we'll merge these settings for each record",
-			"userTitle": "User Settings",
-			"deviceTitle": "Device Settings",
-			"vmboxTitle": "Voicemail Box Settings",
-			"continue": "Continue"
+		"keys": {
+			"featureKey": "Feature Key",
+			"spot": "Spot",
+			"user": "User",
+			"name": "Name",
+			"number": "Number",
+			"keyLimit": "Device Key Limits",
+			"keyLimitSub": "All previous keys included.",
+			"unsupported": "Unsupported Devices",
+			"unsupportedSub": "Devices that do not support feature keys.",
+			"addKeys": "Add Keys"
 		}
 	}
 }
