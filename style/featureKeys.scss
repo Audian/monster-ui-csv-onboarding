@@ -1,0 +1,115 @@
+@import "../../../css/partials/base";
+
+#audian_csv_app {
+    #feature_keys {
+        display: flex;
+        flex-direction: column;
+        width: auto;
+        
+        .groups {
+            width: 100%;
+            max-height: calc(100vh - 180px);
+            overflow: auto;
+        }
+
+        .group {
+            justify-content: space-between;
+
+            padding: 10px 10px;
+            
+            background-color: $dm-5;
+            border: 1.5px solid $dm-border-3;
+            border-radius: 10px;
+
+            &:not(:last-child) {
+                margin-bottom: 10px;
+            }
+
+            .feature-keys {
+                .row {
+                    &:not(:last-child) {
+                        margin-bottom: 10px;
+                    }
+
+                    .key-label {
+                        width: 125px;
+                    }
+
+                    .key-type {
+                        width: 175px;
+                        margin-right: 10px;
+                    }
+
+                    .type-value-container {
+                        display: flex;
+                        flex-direction: row;
+                        align-items: center;
+                        
+                        &.parking {
+                            select {
+                                width: 60px;
+                            }
+                        }
+
+                        &.speedDial {
+                            .type-value {
+                                width: 150px;
+                            }
+
+                            span {
+                                margin-right: 10px;
+                            }
+
+                            .type-value-number {
+                                width: 100px;
+                            }
+                        }
+
+                        label {
+                            width: 45px;
+                            margin-right: 5px;
+                        }
+
+                        .type-value,
+                        .type-value-number {
+                            margin-bottom: unset;
+                            margin-right: 10px;
+                        }
+                    }
+                }
+            }
+
+            .unsupported-devices {
+                margin-top: 10px;
+            }
+
+            .supported-devices,
+            .unsupported-devices {
+                display: flex;
+                flex-direction: column;
+                align-items: end;
+
+                .section-label {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: end;
+
+                    :nth-child(1) {
+                        font-size: large;
+                    }
+
+                    span {
+                        &.text-size {
+                            color: $dm-font-2;
+                        }
+                    }
+                }
+
+                li {
+                    color: $dm-font-3;
+                    font-size: small;
+                }
+            }
+        }
+    }
+}

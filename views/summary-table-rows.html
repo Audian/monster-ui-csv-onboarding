@@ -1,0 +1,78 @@
+{{#each users}}
+<div class="table-row">
+    <div class="user-info cell">
+        <div class="flex flex-row align-center">
+            <div class="info-group flex flex-column">
+                <div class="info-wrapper">
+                    <span class="info-label">{{@root.i18n.csv_app.labels.name}}: </span> 
+                    <span class="info-value">{{this.user.first_name}} {{this.user.last_name}}</span>
+                </div>
+
+                <div class="info-wrapper">
+                    <span class="info-label">{{@root.i18n.csv_app.labels.email}}: </span> 
+                    <span class="info-value">{{this.user.email}}</span>
+                </div>
+
+                <div class="info-wrapper">
+                    <span class="info-label">{{@root.i18n.csv_app.labels.extension}}: </span> 
+                    <span class="info-value">{{this.extras.exts}}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="user-devices cell">
+        {{#each this.user.hardware}}
+        <div class="flex flex-row">
+            <div class="hardware-wrapper flex flex-column">
+                 <div class="info-wrapper">
+                    <span class="info-label">{{@root.i18n.csv_app.labels.model}}: </span> 
+                    <span class="info-value">{{this.brand}} {{this.family}} {{this.model}}</span>
+                    {{#if this.created }}
+                    <span class="status created">{{@root.i18n.csv_app.labels.created}}</span> 
+                    {{else}}
+                    <span class="status failed">{{@root.i18n.csv_app.labels.failed}}</span> 
+                    {{/if}}
+                </div>
+
+                <div class="info-wrapper">
+                    <span class="info-label">{{@root.i18n.csv_app.labels.mac}}: </span> 
+                    <span class="info-value">{{this.mac_address}}</span>
+                </div>
+            </div>
+        </div>
+        {{/each}}
+    </div>
+
+    <div class="user-settings cell">
+        <div class="info-wrapper">
+            <span class="info-label">{{@root.i18n.csv_app.labels.name}}: </span> 
+            <span class="info-value toCapitalize {{this.user.created.user}}">{{this.user.created.user}}</span>
+        </div>
+
+        <div class="info-wrapper">
+            <span class="info-label">{{@root.i18n.csv_app.labels.vmbox}}: </span> 
+            <span class="info-value toCapitalize {{this.user.created.vmbox}}">{{this.user.created.vmbox}}</span>
+        </div>
+
+        <div class="info-wrapper">
+            <span class="info-label">{{@root.i18n.csv_app.labels.callflow}}: </span> 
+            <span class="info-value toCapitalize {{this.user.created.callflow}}">{{this.user.created.callflow}}</span>
+        </div>
+
+        {{#compare this.user.created.directory "!==" "skipped"}}
+        <div class="info-wrapper">
+            <span class="info-label">{{@root.i18n.csv_app.labels.directory}}: </span> 
+            <span class="info-value toCapitalize {{this.user.created.directory}}">{{this.user.created.directory}}</span>
+        </div>
+        {{/compare}}
+
+        {{#compare this.user.created.notes "!==" "skipped"}}
+        <div class="info-wrapper">
+            <span class="info-label">{{@root.i18n.csv_app.labels.notes}}: </span> 
+            <span class="info-value toCapitalize {{this.user.created.notes}}">{{this.user.created.notes}}</span>
+        </div>
+        {{/compare}}
+    </div>
+</div>
+{{/each}}

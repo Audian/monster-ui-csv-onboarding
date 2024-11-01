@@ -1,0 +1,152 @@
+@import "../../../css/partials/base";
+
+#audian_csv_app {
+    .cell {
+        padding: 10px;
+
+        &.user-info {
+            width: 25%;
+        }
+
+        &.user-devices {
+            width: 25%;
+        }
+
+        &.user-settings {
+            width: 25%;
+        }
+
+        &.user-notes {
+            width: 25%;
+        }
+
+        &.user-errors {
+            width: 25%;
+        }
+    }
+
+    .info-group {
+        margin-left: 10px;
+        margin-right: 10px;
+    }
+
+    .info-wrapper {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+
+        .info-label {
+            color: $dm-font-1;
+            font-weight: 700;
+            margin-right: 4px;
+            margin-bottom: 0px;
+        }
+
+        .status {
+            margin-left: 10px;
+
+            &.failed {
+                color: $warning-color;
+            }
+
+            &.created {
+                color: $success-color;
+            }
+        }
+
+        .info-value {
+            color: $dm-font-3;
+
+            &.failed {
+                color: $warning-color;
+            }
+
+            &.created,
+            &.added {
+                color: $success-color;
+            }
+        }
+    }
+
+    .table-header {
+        display: flex;
+        flex-direction: row;
+
+        background-color: $dm-2;
+        font-weight: 700;
+
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+    }
+
+    .table-body {
+        display: flex;
+        flex-direction: column;
+        max-height: calc(100vh - 275px);
+        overflow: auto;
+
+        .table-row {
+            display: flex;
+            flex-direction: row;
+            
+            &:not(:last-child) {
+                margin-bottom: 10px;
+            }
+
+            border: 1px solid $dm-border-3;
+            border-bottom-left-radius: 10px;
+            border-bottom-right-radius: 10px;
+
+            background-color: $dm-5;
+
+            font-size: smaller;
+
+            .user-info {
+                display: flex;
+                flex-direction: column;
+
+                .success {
+                    color: $success-color;
+                }
+
+                .error {
+                    color: $warning-color;
+                }
+            }
+
+            .user-devices {
+                display: flex;
+                flex-direction: column;
+
+                border-left: 1px solid $dm-border-1;
+                border-right: 1px solid $dm-border-1;
+
+                .hardware-wrapper {
+                    margin-bottom: 10px;
+                }
+            }
+
+            .user-settings {
+                display: flex;
+                flex-direction: column;
+            }
+
+            .user-notes {
+                border-left: 1px solid $dm-border-1;
+            }
+
+            .user-errors {
+                display: flex;
+                flex-direction: column;
+
+                border-left: 1px solid $dm-border-1;
+
+                li {
+                    margin-left: 10px;
+                    color: rgb(255, 155, 155);
+                    padding-bottom: 5px;
+                }
+            }
+        }
+    }
+}
