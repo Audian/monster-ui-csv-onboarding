@@ -35,7 +35,7 @@
 		"uploads": {
 			"mainTitle": "Audian SmartPBX Onboarding",
 			"sub1": "This tool allows you to upload a CSV file to create users and devices quickly.",
-			"sub2": "For more information or need the CSV template, please",
+			"sub2": "For more information or to download the CSV template, please",
 			"link": "click here.",
 			"text": "Drag and drop your file here to upload, or browse your computer.",
 			"success": {
@@ -60,7 +60,7 @@
 
 		"creation": {
 			"header": "Creation Summary",
-			"headerSub": "Below shows the results show all users and resources created. Failed rows will be display at the top and noted with failed icons.",
+			"headerSub": "The results below show all users and resources created. Failed rows will be displayed at the top and marked with failure icons.",
 			"actionNote": "The creation process is complete, but if you want to add feature keys to your devices click this button.",
 			"button": "Add Device Feature Keys"
 		},
