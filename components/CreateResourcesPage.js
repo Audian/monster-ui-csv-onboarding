@@ -141,7 +141,7 @@ define(function (require) {
 
                                             var data_to_patch = {
                                                 callflowId: data.id,
-                                                directoryId: App._account_resources.directory.id,
+                                                directoryId: _.get(App._account_resources.directory, 'id', undefined),
                                             },
                                                 has_custom_notes = _.has(user, 'custom_notes') && user.custom_notes.length > 0,
                                                 include_in_directory = _.has(user, 'inDirectory') && user.inDirectory;
@@ -154,6 +154,14 @@ define(function (require) {
 
                                                 });
                                             } else {
+                                                if (!has_custom_notes) {
+                                                    user.created.notes = 'skipped';
+                                                }
+
+                                                if (!include_in_directory) {
+                                                    user.created.directory = 'skipped';
+                                                }
+
                                                 child_callback(main_errors, new_user);
                                             }
                                         });
@@ -264,6 +272,17 @@ define(function (require) {
 
     //? Create User
     var create_user = function (user, accountId, App, callback) {
+        var seatType = user.seat_type.toLowerCase() || 'standard';
+        var seatTypeSettings = {
+            standard: { standardSeat: true, commonSeat: false, virtual_ext: false, analog: false },
+            common: { standardSeat: false, commonSeat: true, virtual_ext: false, analog: false },
+            virtual_extension: { standardSeat: false, commonSeat: false, virtual_ext: true, analog: false },
+            analog: { standardSeat: false, commonSeat: false, virtual_ext: false, analog: true }
+        };
+        var provisionSettings = _.get(seatTypeSettings, seatType, seatTypeSettings.standard);
+        
+        provisionSettings.doNotBill = _.get(user, 'do_not_bill', false);
+
         App.callApi({
             resource: 'user.create',
             skipLocations: true,
@@ -274,10 +293,10 @@ define(function (require) {
                     last_name: user.last_name,
                     email: user.email,
                     username: user.email,
-                    seat_type: user.seat_type.toLowerCase() || 'standard',
                     send_email_on_creation: false,
                     presence_id: user.extension[0],
                     password: user.password,
+                    provision: provisionSettings,
                     caller_id: {
                         internal: {
                             name: user.first_name + ' ' + user.last_name,
@@ -334,7 +353,7 @@ define(function (require) {
 
             device_data = {
                 enabled: true,
-                name: user.first_name + ' ' + user.last_name + ' ' + hardware.brand + ' ' + hardware.family + ' ' + hardware.model,
+                name: user.first_name + ' ' + user.last_name + ' ' + hardware.brand +  ' ' + hardware.model,
                 owner_id: user.id,
                 device_type: 'sip_device',
                 sip: {
@@ -454,7 +473,7 @@ define(function (require) {
         var callflowId = data_to_patch.callflowId,
             directoryId = data_to_patch.directoryId,
             id = user.id,
-            has_custom_notes = _.has(user, 'custom_notes') && user.custom_notes.length > 0,
+            has_custom_notes = _.has(user, 'custom_notes') && user.custom_notes.trim().length > 0,
             include_in_directory = _.get(user, 'in_directory', false),
             data_to_patch = {};
 
