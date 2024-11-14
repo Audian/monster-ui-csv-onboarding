@@ -87,7 +87,7 @@ define(function (require) {
                                             return value && value.trim() !== '';
                                         });
                                     });
-        
+
                                     App._records = cleanedData;
                                     App.locationId = locationId;  //? Billing Location Addition
         

@@ -1,10 +1,10 @@
 <div class="page" id="review">
 	<div class="tabbable">
 		<ul class="nav nav-tabs">
-			<li class={{#unless hasErrors}}"active"{{/unless}}><a href="#success_tab" data-toggle="tab">{{i18n.csv_app.labels.validUsers}}</a></li>
+			<li class="success-tab{{#unless hasErrors}}active{{/unless}}"><a href="#success_tab" data-toggle="tab">{{i18n.csv_app.labels.validUsers}}</a></li>
 
 			{{#if hasErrors}}
-			<li class={{#if hasErrors}}"active"{{/if}}><a href="#error_tab" data-toggle="tab">{{i18n.csv_app.labels.invalidUsers}}</a></li>
+			<li class="error-tab {{#if hasErrors}}active{{/if}}"><a href="#error_tab" data-toggle="tab">{{i18n.csv_app.labels.invalidUsers}}</a></li>
 			{{/if}}
 			
 			<span class="status-text">
