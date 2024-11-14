@@ -1,6 +1,7 @@
 define(function (require) {
     var $ = require('jquery'),
         _ = require('lodash'),
+        toasts = require('toastr'),
         Validate = require('./validator');
 
     /**
@@ -17,9 +18,9 @@ define(function (require) {
 
         App._csv_resources = csv_resources;
 
-        _.each(records, function (row) {
+        _.each(records, function (row, index) {
             var current_email = row.email,
-                row_type = get_row_type(row),
+                row_type = get_row_type(row, index),
                 new_user = null,
                 new_user_extras = null,
                 is_duplicate_email_in_csv = false;
@@ -32,7 +33,6 @@ define(function (require) {
                     new_user_extras = format_extra_row(row);
                     break;
                 case 'invalid_row':
-                    console.error('Invalid row', row);
                     break;
                 default:
                     console.error('Unknown row type', row);
@@ -69,7 +69,7 @@ define(function (require) {
                         allUsers[current_email].hardware.push(hardwareToAdd);
                     }
                 } else {
-                    console.log('   - Extra Row Ignored, no email match');
+                    console.error('   - Extra Row Ignored, no email match');
                 }
             }
 
@@ -145,7 +145,7 @@ define(function (require) {
                 family: family.toUpperCase(),
                 mac_address: mac_address.replace(/:/g, '').toUpperCase()
             }] : [],
-            seat_type: seat_type !== 'None' ? seat_type : 'Standard',
+            seat_type: seat_type !== 'None' && seat_type.trim() !== '' ? seat_type : 'Standard',
             do_not_bill: monster.util.isSuperDuper() ? do_not_bill : false,
             include_voicemail: includeVoicemail,
             in_directory: in_directory,
@@ -194,7 +194,7 @@ define(function (require) {
         return extras;
     };
 
-    function get_row_type(user) {
+    function get_row_type(user, index) {
         var has_first_name = _.has(user, 'first_name') && user.first_name !== '',
             has_last_name = _.has(user, 'last_name') && user.last_name !== '',
             has_email = _.has(user, 'email') && user.email !== '',
@@ -212,6 +212,30 @@ define(function (require) {
             if (has_email && (has_hardware || has_phone_number || has_ext)) {
                 return 'extra_row';
             } else {
+                var errors = [];
+
+                if (!has_email) {
+                    errors.push('Email is missing');
+                }
+
+                if (!has_first_name) {
+                    errors.push('First name is missing');
+                }
+
+                if (!has_last_name) {
+                    errors.push('Last name is missing');
+                }
+
+                if (!has_ext) {
+                    errors.push('Extension is missing');
+                }
+
+                if (errors.length > 0) {
+                    var message = 'Row Errors Between ' + index + ' to ' + (parseInt(index) + 4) + ': ' + errors.join(', ');
+                    toasts.error(message);
+                    console.error(message);
+                }
+
                 return 'invalid_row';
             }
         }
