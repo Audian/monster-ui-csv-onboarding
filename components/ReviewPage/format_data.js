@@ -108,8 +108,8 @@ define(function (require) {
          * @returns the formatted user object
          */
     function format_user(user) {
-        var seat_type = _.has(user, 'seat_type') ? user.seat_type : 'standard',
-            do_not_bill = _.has(user, 'do_not_bill') ? user.do_not_bill === 'yes' : false,
+        var seat_type = _.has(user, 'seat_type') && monster.util.isSuperDuper() ? user.seat_type : 'Standard',
+            do_not_bill = _.has(user, 'do_not_bill') && monster.util.isSuperDuper() ? user.do_not_bill === 'yes' : false,
             includeVoicemail = _.has(user, 'include_voicemail') ? user.include_voicemail === 'yes' : true,
             in_directory = _.has(user, 'in_directory') ? user.in_directory === 'yes' : false,
             extension = _.has(user, 'extension') && user.extension !== '' ? user.extension : null,
