@@ -144,7 +144,7 @@ define(function (require) {
                                                 directoryId: _.get(App._account_resources.directory, 'id', undefined),
                                             },
                                                 has_custom_notes = _.has(user, 'custom_notes') && user.custom_notes.length > 0,
-                                                include_in_directory = _.has(user, 'inDirectory') && user.inDirectory;
+                                                include_in_directory = _.has(user, 'in_directory') && user.in_directory;
 
                                             user.created.callflow = 'created';
 
@@ -507,7 +507,7 @@ define(function (require) {
             success: function (data) {
                 var user_data = data.data,
                     created_notes = has_custom_notes && user_data.smartpbx.custom_notes,
-                    added_to_directory = include_in_directory && user_data.directories[directoryId] === callflowId;
+                    added_to_directory = include_in_directory && _.get(user_data.directories, 'directoryId') === callflowId;
 
                 if (has_custom_notes) {
                     if (created_notes) {
@@ -520,7 +520,9 @@ define(function (require) {
                 if (include_in_directory) {
                     if (added_to_directory) {
                         user.created.directory = 'added';
-
+                    } else {
+                        user.created.directory = 'failed';
+                        console.error('Error', 'Failed to add user to directory, it is most likely that the directory with the name "SmartPBX Directory" does not exist.');
                     }
                 } else {
                     user.created.directory = 'skipped';
