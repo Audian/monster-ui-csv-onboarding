@@ -507,7 +507,7 @@ define(function (require) {
             success: function (data) {
                 var user_data = data.data,
                     created_notes = has_custom_notes && user_data.smartpbx.custom_notes,
-                    added_to_directory = include_in_directory && _.get(user_data.directories, 'directoryId') === callflowId;
+                    added_to_directory = include_in_directory && _.get(user_data.directories, directoryId) === callflowId;
 
                 if (has_custom_notes) {
                     if (created_notes) {
