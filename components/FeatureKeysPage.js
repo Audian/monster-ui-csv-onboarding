@@ -75,6 +75,10 @@ define(function (require) {
                 }
             });
 
+            var sortedUserOptions = userOptions.length > 0 ? userOptions.sort(function (a, b) {
+                return a.name.localeCompare(b.name);
+            }): [];
+
             var feature_key_template = $(App.getTemplate({
                 name: 'feature-keys-page',
                 data: {
@@ -83,7 +87,7 @@ define(function (require) {
                     unsupportedDevices: unsupportedDevices,
                     parkingSpots: parkingSpots,
                     keyTypes: keyTypes,
-                    userOptions: userOptions
+                    userOptions: sortedUserOptions
                 }
             }));
 
