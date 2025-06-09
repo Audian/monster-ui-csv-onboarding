@@ -372,7 +372,7 @@ define(function (require) {
                 },
                 media: {
                     audio: {
-                        codecs: ['PCMA', 'PCMU']
+                        codecs: ['PCMU', 'PCMA']
                     }
                 }
             }
