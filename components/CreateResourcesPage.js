@@ -369,6 +369,11 @@ define(function (require) {
                 sip: {
                     password: monster.util.randomString(12),
                     username: 'user_' + monster.util.randomString(10)
+                },
+                media: {
+                    audio: {
+                        codecs: ['PCMU', 'PCMA']
+                    }
                 }
             }
         }
